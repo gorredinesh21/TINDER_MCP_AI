@@ -13,6 +13,19 @@ Format:
 
 ---
 
+## 2026-06-02 — desktop / Claude Code
+- did: Deep PHOTO research saved to `knowledge/photo_research_notes.md` — covers resolution/technical,
+  background, colour palette + clothing, poses/body language, selfies, editing/filters + Tinder Face
+  Check verification (2026), the 6-shot story lineup, grooming, India notes, and the exact per-photo
+  checks a vision model can make. Live `dating_profile_kb.md` left UNCHANGED on purpose (integration is
+  a deliberate next step, not done yet).
+- next: VISION step. (1) Fold photo_research_notes into the KB IMAGES section. (2) Wire a multimodal
+  model to actually SEE each photo URL (HF vision model, or local llava) and score keep/drop + ordering
+  against these criteria — currently photo analysis is metadata-only. CDN URLs confirmed loadable on a
+  home network, so run the vision step there.
+- blocked/notes: Brain is still prompt-based (KB in system prompt), Qwen2.5-72B via HF (set per-machine
+  in .env, not in git). Decide HF-vision-model vs local-llava for the image step before building.
+
 ## 2026-06-01 (night) — office laptop / Antigravity
 - did: Created `run_pipeline.py` to support an automated, end-to-end, single-run pipeline: pulls live profile details, runs them through the upgraded Qwen-72B brain to produce a high-effort improved bio, and writes it back live to Tinder, followed by refetch-verification.
   Successfully ran the pipeline! The bio was updated live to: `"Tech guy who finds peace in meditation and chaos in badminton matches. Trilingual, I plot my weekends with the same focus as my coding projects. What's your best guilty pleasure? Best unpopular food opinion wins a first date. Go."`
