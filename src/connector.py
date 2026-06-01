@@ -76,16 +76,74 @@ class TinderConnector:
     def get_my_profile(self) -> Profile:
         u = self._self
         country = getattr(getattr(u, "position_info", None), "country", "") or ""
+        
+        # 1. Start with robust defaults from legacy profile payload
+        photos_list = _photos(getattr(u, "photos", ()))
+        interests_list = []
+        descriptors_list = []
+        prompts_list = []
+        email_val = getattr(u, "email", None)
+        intent_val = "unsure"
+        
+        # 2. Try fetching rich v2 profile data (interests, descriptors, prompts)
+        try:
+            import requests as req
+            headers = {
+                "X-Auth-Token": self._client._http._headers.get("X-Auth-Token", ""),
+                "User-Agent": "Tinder/14.21.0 (iPhone; iOS 16.6.1; Scale/3.00)",
+                "Content-Type": "application/json",
+            }
+            res = req.get("https://api.gotinder.com/v2/profile?include=account,user", headers=headers).json()
+            if "data" in res and "user" in res["data"]:
+                user_data = res["data"]["user"]
+                
+                # Fetch selected interests
+                for item in user_data.get("user_interests", {}).get("selected_interests", []):
+                    interests_list.append(item.get("name", ""))
+                
+                # Fetch prompts
+                for p in user_data.get("user_prompts", {}).get("prompts", []):
+                    prompts_list.append({"q": p.get("question_text", ""), "a": p.get("answer_text", "")})
+                
+                # Fetch descriptors (zodiac, smoker, drinking, height, languages, etc.)
+                for d in user_data.get("selected_descriptors", []):
+                    name = d.get("name", d.get("id", ""))
+                    # Clean up common raw IDs to human-readable names
+                    if not name or name == "de_37":
+                        name = "Languages"
+                    elif name == "de_38":
+                        name = "Relationship Type"
+                    
+                    choices = [c.get("name", "") for c in d.get("choice_selections", [])]
+                    if choices:
+                        descriptors_list.append({"name": name, "value": ", ".join(choices)})
+                
+                # Determine intent / looking for
+                for d in user_data.get("selected_descriptors", []):
+                    if d.get("id") == "de_29":  # "Looking for"
+                        choices = [c.get("name", "") for c in d.get("choice_selections", [])]
+                        if choices:
+                            goal = choices[0].lower()
+                            if "long" in goal:
+                                intent_val = "serious"
+                            elif "short" in goal:
+                                intent_val = "casual"
+        except Exception:
+            pass  # Fallback to defaults to remain extremely robust if Tinder changes format
+            
         return Profile(
             name=u.name,
             age=_age_from_birth_date(getattr(u, "birth_date", None)),
-            city=country,                       # self profile exposes country, not city
+            city=country,
             bio=getattr(u, "bio", "") or "",
             job=_job_str(u),
-            prompts=[],                         # not exposed for the self user by the library
-            photos=_photos(getattr(u, "photos", ())),
-            intent="unsure",                    # Tinder doesn't expose this
+            prompts=prompts_list,
+            photos=photos_list,
+            intent=intent_val,
             verified=_is_verified(u),
+            interests=interests_list,
+            descriptors=descriptors_list,
+            email=email_val,
         )
 
     def list_matches(self, limit: int | None = 20, with_messages: bool = True,

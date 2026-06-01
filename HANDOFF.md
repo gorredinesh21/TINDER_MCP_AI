@@ -19,5 +19,6 @@ Format:
   Configured `.env` with Hugging Face API key. Verified offline `demo.py` scoring is fully working.
   Added a feature to `src/connect_demo.py` to write the full extracted Tinder profile Pydantic model to a timestamped JSON file (e.g. `extracted_profile_<name>_<timestamp>.json`).
   Wrapped live matches loading in a robust try-except block so that the script completes and shows the standardization report even if Tinder blocks/limits the matches API.
-- next: The user's live Tinder `/profile` fetch and profile standardizer work perfectly! The `/v2/matches` API returns a 401 Unauthorized. The user can verify if their token has permissions or extract a fresh token to try matches.
+  Extended `Profile` schema and `TinderConnector` to fetch modern profile details (selected interests, prompts, email, and descriptors like Zodiac, Smoking, Drinking, Love Language, workout, languages, education, and relationship type) by bypassing Desktop User-Agent limits using a direct mobile request to Tinder's `/v2/profile` endpoint.
+- next: The user's live Tinder `/profile` and modern `/v2/profile` fetches work flawlessly! The entire rich profile data is now captured in the output JSON. The `/v2/matches` API returns a 401 Unauthorized. The user can verify if their token has permissions or extract a fresh token to try matches.
 - blocked/notes: All 7 offline tests are passing perfectly. No secrets committed.

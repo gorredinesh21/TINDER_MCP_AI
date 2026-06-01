@@ -39,6 +39,9 @@ class Profile(BaseModel):
     photos: list[Photo] = Field(default_factory=list)
     intent: Intent = "unsure"
     verified: bool = False
+    interests: list[str] = Field(default_factory=list)
+    descriptors: list[dict[str, str]] = Field(default_factory=list)  # [{"name": "Zodiac", "value": "Libra"}]
+    email: Optional[str] = None
 
 
 class ChatTurn(BaseModel):
