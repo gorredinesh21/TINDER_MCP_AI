@@ -67,6 +67,7 @@ class TinderConnector:
             raise RuntimeError(
                 "No Tinder token. Set TINDER_X_AUTH_TOKEN in .env (see README token guide)."
             )
+        self._token = token
         self._client = TinderClient(token)          # raises LoginException if token is bad/expired
         self._self = self._client.get_self_user()
         self._self_id = self._self.id
@@ -163,6 +164,32 @@ class TinderConnector:
     def send_message(self, match_id: str, text: str) -> None:
         """Send a message you have personally reviewed. The AI never calls this."""
         self._client.get_match(match_id).send_message(text)
+
+    def update_my_bio(self, new_bio: str, confirm: bool = False) -> dict:
+        """Push a new bio to YOUR OWN profile. MANUAL-CONFIRM only — pass confirm=True.
+
+        This edits your own profile (not messaging anyone), but it's still a write, so it
+        refuses unless you explicitly confirm. The AI never calls this on its own; you call it
+        after reviewing the improved bio. Uses a mobile User-Agent (same trick that made the
+        v2/profile READ work on the work laptop).
+        """
+        if not confirm:
+            raise RuntimeError(
+                "update_my_bio refused: pass confirm=True to actually change your live bio."
+            )
+        import requests as _req
+        headers = {
+            "X-Auth-Token": self._token,
+            "User-Agent": "Tinder/14.21.0 (iPhone; iOS 16.6.1; Scale/3.00)",
+            "Content-Type": "application/json",
+        }
+        res = _req.post(
+            "https://api.gotinder.com/v2/profile",
+            headers=headers,
+            json={"user": {"bio": new_bio}},
+        )
+        res.raise_for_status()
+        return res.json()
 
     # ---------- mapping ----------
 

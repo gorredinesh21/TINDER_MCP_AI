@@ -91,6 +91,21 @@ class ProfileReport(BaseModel):
     recommended_photo_order: list[str] = Field(description="photo ids, best-first")
     prompt_suggestions: list[str]
     gaps: list[str] = Field(description="what's missing, e.g. 'no full-body shot'")
+    improved_prompts: list[dict[str, str]] = Field(
+        default_factory=list,
+        description="rewritten answers to the user's EXISTING prompts: [{q,a}], same questions, "
+        "true facts only. Empty list if the user has no prompts.",
+    )
+
+
+class ImprovementResult(BaseModel):
+    """What improve_profile() returns: the analysis AND a ready-to-use improved profile.
+
+    `improved_profile` is the same shape as the input Profile with the changes applied
+    (best bio + rewritten prompts). Photos and factual fields are left UNCHANGED.
+    """
+    report: ProfileReport
+    improved_profile: Profile
 
 
 class MessageDraft(BaseModel):

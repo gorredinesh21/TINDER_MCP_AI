@@ -24,7 +24,7 @@ from typing import Type, TypeVar
 from pydantic import BaseModel, ValidationError
 
 from llm import LLM, make_llm
-from schema import Profile, Match, ProfileReport, DraftSet
+from schema import Profile, Match, ProfileReport, DraftSet, ImprovementResult
 
 KB_PATH = Path(__file__).resolve().parent.parent / "knowledge" / "dating_profile_kb.md"
 
@@ -38,6 +38,9 @@ knowledge pack above as your rubric, evaluate and standardize the user's OWN pro
 details from the profile. Keep each 100-300 characters.
 - Assess every photo (keep/drop, suggested slot, strengths, issues) and give a best-first order by id.
 - Suggest prompt answers and list concrete gaps (e.g. "no full-body shot").
+- Also return `improved_prompts`: rewrite the answers to the user's EXISTING prompts (keep the
+  SAME questions), making them specific and engaging. Do NOT invent prompts the user doesn't have;
+  if the profile has no prompts, return an empty list. Never fabricate facts.
 - Be specific and honest; flag cliches and anything that hurts in the India safety-first market."""
 
 REPLY_TASK = """You are a dating-message assistant for the Indian market. Using ONLY the \
@@ -71,6 +74,24 @@ def _parse(model_cls: Type[T], text: str) -> T:
         raise ValueError(f"Model output didn't match {model_cls.__name__}:\n{raw[:800]}\n\n{e}") from e
 
 
+def apply_report(profile: Profile, report: ProfileReport, bio_choice: int = 0) -> Profile:
+    """Pure, deterministic: produce an improved Profile by applying the report.
+
+    - bio  -> the chosen bio_variant (default = the first / top one)
+    - prompts -> report.improved_prompts, if any
+    - photos and every factual field (interests, descriptors, job, email, city, age...) are
+      left UNCHANGED. Photos are intentionally out of scope for now.
+    No LLM call here — just assembly, so it's testable offline and predictable.
+    """
+    updates: dict = {}
+    if report.bio_variants:
+        idx = bio_choice if 0 <= bio_choice < len(report.bio_variants) else 0
+        updates["bio"] = report.bio_variants[idx].text
+    if report.improved_prompts:
+        updates["prompts"] = report.improved_prompts
+    return profile.model_copy(update=updates)
+
+
 class DatingCoach:
     def __init__(self, llm: LLM | None = None):
         self.llm = llm or make_llm()
@@ -90,6 +111,17 @@ class DatingCoach:
         system = self._system(PROFILE_TASK, ProfileReport)
         user = "Here is the user's profile as JSON:\n\n" + profile.model_dump_json(indent=2)
         return _parse(ProfileReport, self.llm.generate(system, user))
+
+    def improve_profile(self, profile: Profile, bio_choice: int = 0) -> ImprovementResult:
+        """Profile JSON in -> {analysis report, improved profile JSON} out.
+
+        One LLM call (the standardize step) produces the report; the improved profile is then
+        assembled deterministically via apply_report(). `improved_profile` is the same Profile
+        shape with the new bio + rewritten prompts applied; photos are left untouched.
+        """
+        report = self.standardize_profile(profile)
+        improved = apply_report(profile, report, bio_choice=bio_choice)
+        return ImprovementResult(report=report, improved_profile=improved)
 
     def draft_replies(self, match: Match, my_profile: Profile) -> DraftSet:
         system = self._system(REPLY_TASK, DraftSet)

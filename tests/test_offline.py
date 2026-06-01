@@ -39,6 +39,30 @@ def test_model_output_parses_into_pydantic():
     assert report.bio_variants[0].tone == "playful"
 
 
+def test_apply_report_builds_improved_profile_without_touching_photos():
+    """apply_report is pure (no LLM): bio + prompts get applied, photos stay untouched."""
+    from coach import apply_report
+    from schema import Profile, Photo, ProfileReport, BioVariant
+    profile = Profile(
+        name="Test", age=28, city="Pune", bio="old cliche bio",
+        prompts=[{"q": "A perfect Sunday", "a": "idk"}],
+        photos=[Photo(id="p1", url="http://x/1.jpg"), Photo(id="p2", url="http://x/2.jpg")],
+    )
+    report = ProfileReport(
+        photo_score=50, bio_score=30, overall_score=40, summary="s",
+        bio_variants=[BioVariant(text="new specific bio with a hook", tone="playful",
+                                 rationale="r", char_count=28)],
+        photo_assessments=[], recommended_photo_order=["p2", "p1"],
+        prompt_suggestions=[], gaps=[],
+        improved_prompts=[{"q": "A perfect Sunday", "a": "filter coffee then a long trek"}],
+    )
+    improved = apply_report(profile, report)
+    assert improved.bio == "new specific bio with a hook"          # bio applied
+    assert improved.prompts[0]["a"] == "filter coffee then a long trek"  # prompt applied
+    assert improved.photos == profile.photos                        # photos UNCHANGED
+    assert improved.age == 28 and improved.city == "Pune"           # facts preserved
+
+
 def test_ollama_backend_constructs_offline():
     """ChatOllama construction does not hit the network."""
     os.environ["LLM_BACKEND"] = "ollama"
