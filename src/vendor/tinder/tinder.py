@@ -105,7 +105,7 @@ class TinderClient:
 
         self._matches.clear()
         for match in matches:
-            self._matches.update(key=match.id, value=match)
+            self._matches[match.id] = match
         return tuple(matches)
 
     def get_match(self, match_id: str) -> Match:
