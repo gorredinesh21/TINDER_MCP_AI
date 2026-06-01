@@ -13,6 +13,15 @@ Format:
 
 ---
 
+## 2026-06-01 — office laptop / Antigravity
+- did: Pulled massive updates from desktop/Claude Code side (improve capability, improve_demo, tests).
+  Ran `pytest` and confirmed all 8/8 tests pass.
+  **Step 1 Live Bio Update SUCCESS**: Executed live bio write-back via `update_my_bio` using the Mobile User-Agent and confirmed that the bio changed on Tinder to `"Tech guy. Coffee addict. Badminton all the time, naps always. What's your guilty pleasure?"` and was re-extracted in our subsequent fetch payload.
+  Verified `/v2/matches` with Mobile User-Agent still returns a 401, confirming it is an auth/scope restriction on this specific token rather than a User-Agent issue.
+  **Step 2 Image Connectivity check**: Verified that Tinder's photo SSL CDN URLs are fully accessible (HTTP 200) over this personal network (which were blocked on the work network).
+- next: The other side can now implement multimodal photo analysis knowing CDN URLs are fully readable.
+- blocked/notes: Bio write-back flow is verified 100% working live. All tests are green.
+
 ## 2026-06-01 — desktop / Claude Code
 - did: Added the "improve" capability to the brain. `coach.improve_profile(profile)` now returns
   BOTH an analysis report AND a ready-to-use improved profile (same Profile JSON shape with the
