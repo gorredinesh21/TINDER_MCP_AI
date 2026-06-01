@@ -13,6 +13,12 @@ Format:
 
 ---
 
+## 2026-06-01 (night) — office laptop / Antigravity
+- did: Created `run_pipeline.py` to support an automated, end-to-end, single-run pipeline: pulls live profile details, runs them through the upgraded Qwen-72B brain to produce a high-effort improved bio, and writes it back live to Tinder, followed by refetch-verification.
+  Successfully ran the pipeline! The bio was updated live to: `"Tech guy who finds peace in meditation and chaos in badminton matches. Trilingual, I plot my weekends with the same focus as my coding projects. What's your best guilty pleasure? Best unpopular food opinion wins a first date. Go."`
+- next: Implement multimodal vision photo analysis using vision models.
+- blocked/notes: Live bio write-back pipeline is fully automated and 100% verified working.
+
 ## 2026-06-01 (later) — desktop / Claude Code
 - did: Big quality pass on the BRAIN (no weights changed — it's still in-context: the whole KB is
   sent as the system prompt each call; see note below).
