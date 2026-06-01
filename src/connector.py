@@ -184,9 +184,9 @@ class TinderConnector:
             "Content-Type": "application/json",
         }
         res = _req.post(
-            "https://api.gotinder.com/v2/profile",
+            "https://api.gotinder.com/profile",
             headers=headers,
-            json={"user": {"bio": new_bio}},
+            json={"bio": new_bio},
         )
         res.raise_for_status()
         return res.json()
