@@ -1,0 +1,19 @@
+{
+  "name": "Arjun",
+  "age": 28,
+  "city": "Bengaluru",
+  "bio": "Love travelling, foodie, fluent in sarcasm. Here for a good time. Swipe right ;)",
+  "job": "Data engineer at a fintech",
+  "prompts": [
+    {"q": "A perfect first date", "a": "idk you tell me"},
+    {"q": "My simple pleasures", "a": "coffee, code, cricket"}
+  ],
+  "photos": [
+    {"id": "p1", "declared_type": "group", "caption": "with the boys in Goa"},
+    {"id": "p2", "declared_type": "selfie", "caption": "gym mirror selfie"},
+    {"id": "p3", "declared_type": "solo_portrait", "caption": "at a friend's wedding, sherwani"},
+    {"id": "p4", "declared_type": "activity", "caption": "trekking Kudremukh, summit"}
+  ],
+  "intent": "serious",
+  "verified": false
+}

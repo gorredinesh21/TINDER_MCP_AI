@@ -1,0 +1,12 @@
+{
+  "match_id": "m_001",
+  "name": "Meera",
+  "age": 26,
+  "bio": "Architect. Will travel for good filter coffee and old bookstores. Trying to read 40 books this year (currently behind).",
+  "interests": ["books", "coffee", "architecture", "hiking"],
+  "verified": true,
+  "photos": [
+    {"id": "mp1", "declared_type": "solo_portrait", "caption": "Hampi at sunrise"}
+  ],
+  "conversation": []
+}
