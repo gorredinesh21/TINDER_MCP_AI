@@ -13,6 +13,28 @@ Format:
 
 ---
 
+## 2026-06-01 (later) — desktop / Claude Code
+- did: Big quality pass on the BRAIN (no weights changed — it's still in-context: the whole KB is
+  sent as the system prompt each call; see note below).
+  • Rewrote `knowledge/dating_profile_kb.md` to v2 "high-effort": demands real changes, forces use of
+    interests/descriptors, deep separate IMAGES section (Photofeeler + 2025 1.8M-profile stats),
+    stronger BIO + PROMPTS rubrics with scoring. Examples are GENERIC personas (so the model learns the
+    shape, not copy-pastes) + a "never copy examples" rule in `coach.py` PROFILE_TASK.
+  • Upgraded the model: `.env` HF_MODEL is now **Qwen/Qwen2.5-72B-Instruct** (probed free HF providers;
+    72B and Llama-3.3-70B work, 14B/32B/Mistral-24B are NOT served free). Structured output (prompt+parse)
+    still validates fine on 72B. Output is now genuinely better: bio + prompts are specific and ORIGINAL,
+    gaps flags the intent-vs-'Looking for' mismatch.
+  • Cleanup: deleted old extracted_profile_*.json (kept only the newest) and ALL improved_profile_*.json.
+  Tests 8/8.
+- next: IMAGES / vision is the priority (you confirmed CDN URLs load on home network). Wire a multimodal
+  model to actually SEE the photos and apply photo keep/drop + ordering (currently photo analysis is
+  metadata-only). Then optionally revisit the /v2/matches 401 with a freshly-minted token.
+- blocked/notes: (1) The brain is PROMPT-BASED, not fine-tuned — the KB (~3.75k tokens) is re-sent every
+  call; editing the .md instantly changes behavior. Fine-tuning/LoRA is a future option once we have a
+  set of ideal (profile -> improved) examples. (2) Qwen-72B uses more HF free credits/call than 7B —
+  watch the monthly quota; local Ollama stays as the zero-cost fallback. (3) If you set HF_MODEL, keep it
+  to a model the free providers actually serve (72B confirmed).
+
 ## 2026-06-01 — office laptop / Antigravity
 - did: Pulled massive updates from desktop/Claude Code side (improve capability, improve_demo, tests).
   Ran `pytest` and confirmed all 8/8 tests pass.
