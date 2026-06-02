@@ -26,6 +26,7 @@ class Photo(BaseModel):
     url: Optional[str] = None
     declared_type: Optional[PhotoType] = None
     caption: Optional[str] = None
+    description: Optional[str] = None
 
 
 class Profile(BaseModel):

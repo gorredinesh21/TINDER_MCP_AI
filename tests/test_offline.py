@@ -94,3 +94,21 @@ def test_connector_requires_token():
     from connector import TinderConnector
     with pytest.raises(RuntimeError):
         TinderConnector(auth_token=None)
+
+
+def test_vision_offline(monkeypatch):
+    """Verify TinderVision schema updates and offline mock description generation."""
+    monkeypatch.setenv("TESTING_OFFLINE", "true")
+    from schema import Photo
+    from vision import TinderVision
+
+    # 1. Verify schema update
+    photo = Photo(id="p_test", url="http://x/test.jpg", description=None)
+    assert photo.description is None
+
+    # 2. Verify TinderVision mock behavior
+    vision = TinderVision()
+    updated = vision.describe_photos([photo])
+    assert len(updated) == 1
+    assert updated[0].description == "Mock description for photo p_test"
+

@@ -49,8 +49,7 @@ pet, drinking/smoking, "looking for", love style, education, etc.). USE IT.
   generic answers (e.g. "Badminton", "Food and sports") are unacceptable and MUST become specific,
   vivid, reply-inviting lines using his real details. Assign roles across prompts (one funny, one
   thoughtful, one cute). Keep his real content; upgrade the delivery. Empty list ONLY if he has no prompts.
-- photo_assessments + recommended_photo_order: assess every photo (keep/drop, slot, strengths, issues)
-  and give a best-first order by id. If no real images are provided, reason from metadata and say so.
+- photo_assessments + recommended_photo_order: assess every photo (keep/drop, slot, strengths, issues) using the `Photo.description` field (which contains rich visual VLM analysis of background, outfit, smile, grooming, framing, and selfies) or photo metadata. Evaluate quality, background clutter, wardrobe, facial expression/grooming, pose open-ness, and selfies. Give a best-first order by id. If no real images or descriptions are provided, reason from metadata and say so.
 - prompt_suggestions: extra prompt ideas he could add. gaps: concrete missing pieces (e.g. "no full-body
   shot", "no job listed", intent vs 'Looking for' mismatch).
 - Score photos and bio with the rubric's formulas (0-100); set overall to your weighted judgement; be

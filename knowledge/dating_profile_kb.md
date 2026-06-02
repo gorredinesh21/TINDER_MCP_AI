@@ -143,66 +143,57 @@ These are free, pre-verified specifics. Use them.
 
 ---
 
-## 5. IMAGES — separate, deep, science-backed rubric
+## 5. IMAGES — separate, deep, science-backed rubric (India Men, 2025–2026)
 
-> Photos are the highest-leverage lever (≈70% of outcome; first photo ≈52% of the decision in ~1.7s).
-> Treat photo work as the priority. Stats below are directional from public studies (Photofeeler
-> neural-net study; a 2025 analysis of ~1.8M profiles; Univ. of Amsterdam swipe study).
+> Photos are the absolute highest-leverage lever (≈70% of swipe outcomes; the FIRST photo alone drives ~52% of the decision, made in ~1.7–1.9s).
+> Treat photo evaluation and suggestions as the absolute priority. Stats below are from public surveys, neural-net pose studies (Photofeeler), and a 2025 analysis of ~1.8M profiles.
 
 ### Hard rules
-- **I1 — First photo = solo, clear face, eye contact, great natural light, uncluttered background,
-  relaxed/warm expression.** This is the "logo." Never lead with a group shot, sunglasses, or a hat
-  that hides the face.
-- **I2 — 5–6 photos** is the sweet spot (declines past ~10). Fewer than 3 is a major gap.
-- **I3 — ≤1 selfie.** Selfies score ~40% lower and distort the face; bathroom/bedroom "thirst" selfies
-  ~ −42%. Prefer photos taken by someone else.
-- **I4 — No group photo in slots 1–2.** If used later, it must be instantly obvious which person is him,
-  and only after 3+ strong solos.
+- **I1 — First photo = solo, clear face, eye contact, great natural light, uncluttered background, relaxed/warm expression.** This is the "logo" (drives ~52% of interest). Never lead with a group shot, sunglasses, or a hat that hides the face.
+- **I2 — 5–6 photos** is the sweet spot. Fewer than 3 is a major gap. Match rates decline past ~10.
+- **I3 — ≤1 selfie (ideally zero).** Selfies score ~40% lower and distort the face (due to focal length); bathroom/bedroom thirst selfies ≈ −42%. Lead photo NEVER a selfie.
+- **I4 — No group photo in slots 1–2.** Only after 3+ strong solos, and he must be instantly identifiable. Group shots later show social proof (≈ +12% match rate).
+- **I5 — Technical & Quality.** Upload resolution must be **≥1080px on the short side** (display target ~640x800; under 640px pixelates). Shoot with **rear camera** (front camera distorts face). Never transfer via SMS/iMessage compression (use WhatsApp doc/AirDrop).
 
-### The 6-photo lineup (assign every photo a job)
-1. **Lead headshot** — solo, eye contact, genuine smile, soft natural light, clean background.
-2. **Full-body shot** — honest build/style; *not* a gym mirror selfie.
-3. **Activity / passion shot** — doing the thing (badminton, trek, instrument, cooking). Activity
-   photos ≈ +33% for men; outdoor ≈ +29%.
-4. **Social-proof shot** — clearly with friends (he's obviously identifiable). Signals a social life.
-5. **Warm/candid** — a real laugh, or with a dog (dog ≈ +37%). Approachability is judged in ~1.7s.
-6. **Optional personality/travel** — one more facet (a place, a hobby, a tasteful interest shot).
+### The 6-photo lineup (each photo must tell a story/have a job)
+1. **Lead headshot (The "Logo")** — solo, eye contact, genuine smile, soft natural light, clean background.
+2. **Full-body shot** — honest build and style; *not* a gym mirror selfie.
+3. **Activity / passion shot** — doing the thing (trek, badminton, instrument, café, cooking) with face visible. Activity photos ≈ +33% for men; outdoor light/nature ≈ +22% to +29% attention.
+4. **Social-proof shot** — exactly one group shot, instantly identifiable (≈ +12%). Signals active social life; all-solo profiles read as a mild red flag.
+5. **Warm/candid** — a real laugh or relaxed moment; approachability judged in under 2 seconds. A shot with a dog is highly effective (dog ≈ +37%).
+6. **Optional personality/travel** — one smart/formal or travel shot showcasing another facet of style/personality.
 
-### Expression, light, framing
-- **Expression:** a genuine ("Duchenne") smile tends to beat a serious face (one study: ~34% vs ~19%
-  match rate). At minimum, one teeth-showing genuine smile + warm eyes. The clear loser is "no smile
-  AND no eye contact." A relaxed closed-mouth smile with warm eyes is a fine alternative.
-- **Lighting:** soft natural light — face a window with indoor lights off, or shoot at golden hour.
-  Good light changes perceived age, skin health, and how "alive" the eyes look.
-- **Framing:** eyes ~upper third; shoot at or slightly above eye level; mid-distance (not extreme
-  close-up). Variety of settings across the set; one clear face the algorithm/eye can lock onto.
-- **Background:** natural/outdoor ≈ +22%; cluttered/busy ≈ −28%; bathroom mirror ≈ −42%.
-- **Color (minor):** a bit of red/warm or blue can nudge attractiveness/trust perception.
+### Expression, light, framing, and body language
+- **Expression:** A genuine ("Duchenne") teeth-showing smile beats a serious/neutral face (~34% vs ~19% swipe rate). Avoid "no smile AND no eye contact" (worst performer). A warm closed-mouth smile with smiling eyes is a good alternative.
+- **Lighting:** Soft natural light is mandatory. Face a window with indoor lights off, or shoot at golden hour. Good light reduces perceived age and skin imperfections.
+- **Framing:** Eyes in the upper third; shoot at or slightly above eye level; mid-distance framing. 
+- **Body Poses:** Body angled ~45° away with head turned back to the lens (creates depth). Stand tall with open posture (shoulders back, uncrossed arms, hands visible/active—e.g. hand in pocket, holding coffee, leaning on railing).
+- **Wardrobe & Color:** Fit is everything (shoulder seams must align; no baggy clothes that drown the frame). Use **navy/blue** (signals trust/stability) or charcoal/dark green. **Red/black** signals high confidence (great for one accent shot). Avoid neon (distracts from face) and skin-tone/beige/pale-yellow (looks half-naked in thumbnail grids).
 
 ### What to AVOID
-Sunglasses on the lead; hat in every shot; all-selfie sets; group-first; blurry/low-res; heavy
-filters; bathroom/bedroom thirst shots; no-face-visible photos; screenshots; obvious old photos
-that don't match current looks.
+Sunglasses or hats on the lead; bathroom/bedroom mirror selfies; all-selfie profiles; group-first; blurry/low-res; heavy filters/facetune (destroys trust, sets up real-life letdown); no-face-visible photos; screenshots; obvious old/outdated photos.
+Grooming: Bad grooming ruins a great outfit. Hair and beard must be tidy.
 
 ### Ordering strategy
-Lead with the single strongest clear-face shot; alternate types for variety; put the weakest keeper
-last or cut it. Photo **order and variety matter more than any single photo's raw attractiveness.**
+Lead with the single strongest clear-face shot; alternate types/outfits for variety; put the weakest keeper last. Photo **variety of settings, outfits, and angles matters more than any single photo's raw attractiveness.**
 
-### India notes
-Clean, "presentable but not try-hard" lead reads well; avoid heavy luxury-flexing (reads inauthentic
-to the serious-intent segment). Verified badge matters — ~44% of young women prioritize verified
-profiles; recommend getting verified.
+### India market notes
+- **Verification:** Tinder's Face Check video verification is highly valued. ~44% of urban Indian women prioritize verified profiles. Recommend getting verified.
+- **Vibe:** "Presentable but not try-hard". Heavy luxury-flexing (cars, designer logos everywhere) reads as inauthentic and try-hard.
 
 ### Photo scoring (0–100)
 - Lead is solo + clear face + eye contact + good light: 30 (all-or-nothing on solo+clear)
 - Has full-body: 12 · activity/passion: 12 · social-proof: 8 · warm/candid or dog: 8
 - 5–6 photos with ≥4 distinct *types*: 15 · ≤1 selfie: 8 · genuine smile present: 7
-- Penalties: group/sunglasses/hat lead −40; >1 selfie −10 each; bathroom-mirror −15; all same setting −15.
+- Penalties: group/sunglasses/hat lead −40; >1 selfie −10 each; bathroom-mirror −15; all same setting/outfit −15; poor fit/grooming −10.
 
-### Vision note
-When real images are provided (URLs/paths), JUDGE THE ACTUAL IMAGE: solo vs group, expression, eye
-contact, lighting, background, framing, and whether the lead is doing its job. Without images, reason
-from metadata and clearly say analysis is photo-blind.
+### Vision-Assisted Analysis
+When analyzing profile photos, the Dating Coach utilizes **rich visual descriptions** produced by a vision-language model (`llava`) that has inspected the images directly. Use these descriptions to evaluate:
+- Whether the background is cluttered or clean.
+- The color palette and fit of the clothing.
+- Pose openness, facial expression (smile vs neutral, eyes smiling), and grooming.
+- Selfie detection and technical resolution indicators.
+- Overall variety of outfits, settings, and body posture across the set to ensure a complete story is told.
 
 ---
 
