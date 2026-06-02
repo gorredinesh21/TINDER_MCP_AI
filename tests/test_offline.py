@@ -152,3 +152,11 @@ def test_vision_offline(monkeypatch):
     assert len(updated) == 1
     assert updated[0].description == "Mock description for photo p_test"
 
+
+def test_web_update_bio_requires_inputs():
+    r = _web_client().post("/api/update-bio", json={"token": "", "bio": "test"})
+    assert r.status_code == 400
+    r = _web_client().post("/api/update-bio", json={"token": "tok", "bio": ""})
+    assert r.status_code == 400
+
+

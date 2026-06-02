@@ -254,7 +254,10 @@
     <div class="card hl">
       <h2>🔥 Recommended new bio</h2>
       <div class="biotext" id="bioBest"></div>
-      <button class="copy" data-copy="bioBest">Copy bio</button>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="copy" data-copy="bioBest">Copy bio</button>
+        <button class="btn" style="padding:10px 18px; font-size:14px;" onclick="updateTinderBio('bioBest')">Update to Tinder 🔥</button>
+      </div>
     </div>
 
     <div class="card">
@@ -368,7 +371,10 @@ function render(data){
       <div class="biotext" id="bv${i}" style="font-size:15.5px;margin:11px 0 0">${esc(v.text)}</div>
       <div class="meta">${(v.char_count||v.text.length)} chars</div>
       <div class="why">${esc(v.rationale)}</div>
-      <div style="margin-top:11px"><button class="copy" data-copy="bv${i}">Copy</button></div>
+      <div style="margin-top:11px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="copy" data-copy="bv${i}">Copy</button>
+        <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="updateTinderBio('bv${i}')">Update to Tinder 🔥</button>
+      </div>
     </div>`).join('');
 
   const prompts = r.improved_prompts && r.improved_prompts.length ? r.improved_prompts : null;
@@ -435,6 +441,34 @@ async function runSetup(){
     }
   }catch(e){ conLine(con, '✗ '+e.message, 'bad head'); }
   btn.disabled=false; btn.textContent='⚙ Set up local AI';
+}
+
+async function updateTinderBio(elementId){
+  const bioText = $(elementId).textContent.trim();
+  const token = $('token').value.trim();
+  if(!token){
+    toast('❌ Paste your Tinder X-Auth-Token first!');
+    $('inputCard').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Updating… 🚀';
+  try{
+    const res = await fetch('/api/update-bio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, bio: bioText })
+    });
+    const d = await res.json();
+    if(!res.ok) throw new Error(d.detail || 'Failed to update');
+    toast('🎉 Tinder Bio Updated Successfully! 🔥');
+  }catch(e){
+    toast('❌ ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = originalText;
 }
 
 document.addEventListener('click', e=>{

@@ -54,6 +54,11 @@ class AnalyzeRequest(BaseModel):
     use_vision: bool = False
 
 
+class UpdateBioRequest(BaseModel):
+    token: str
+    bio: str
+
+
 class ConfigRequest(BaseModel):
     hf_token: str
 
@@ -156,6 +161,23 @@ def analyze(req: AnalyzeRequest) -> dict:
         raise
     except Exception as e:  # token bad/expired, backend misconfigured, model error, etc.
         raise HTTPException(status_code=400, detail=f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/update-bio")
+def update_bio(req: UpdateBioRequest) -> dict:
+    try:
+        token = req.token.strip()
+        if not token:
+            raise HTTPException(status_code=400, detail="Missing Tinder token.")
+        bio = req.bio.strip()
+        if not bio:
+            raise HTTPException(status_code=400, detail="Bio content cannot be empty.")
+        
+        conn = TinderConnector(auth_token=token)
+        res = conn.update_my_bio(bio, confirm=True)
+        return {"ok": True, "detail": "Profile bio updated live on Tinder!", "response": res}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Update failed: {e}")
 
 
 if __name__ == "__main__":
