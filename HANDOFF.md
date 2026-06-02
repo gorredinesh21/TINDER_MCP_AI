@@ -13,6 +13,29 @@ Format:
 
 ---
 
+## 2026-06-02 (web) — desktop / Claude Code
+- did: Built a **local web dashboard** so reviewers can try the project with no terminal work.
+  • `app.py` (FastAPI, 127.0.0.1 only) + `web/index.html` — energetic redesign (Tinder flame
+    gradient, Space Grotesk/Plus Jakarta fonts, animated bg, score rings that fill + count up,
+    staggered card entrance, hover interactions). NOT vision-document-y anymore.
+  • Flow is now 3 clear steps: ① **Connect HF** (paste key in the page → POST `/api/config` writes
+    it to `.env`, switches LLM_BACKEND=hf, sets a 72B default, rebuilds the brain) ② **Analyze**
+    (paste Tinder token, used once, never stored) with an optional **"analyze my photos with local
+    vision"** toggle ③ **local vision setup** (one-click Ollama install + model pull, streamed live).
+  • Corrected framing: **HF API = text brain (bigger/better models); Ollama = vision only.**
+  • `/api/setup` streams the one-click installer (`src/setup_env.py`) with an error classifier for
+    common failures (network/proxy, disk, perms, PATH, etc.). VERIFIED live: pulled `moondream` here,
+    Ollama registry is reachable on this network (winget + Tinder CDN are not).
+  • `/api/analyze` runs optional local vision (`vision.describe_photos`) before coaching, best-effort.
+  • **Cleanup/standardize:** deleted all real-PII artifacts (extracted_/analyzed_/improved_ JSON,
+    TINDER_COACH_REPORT.md) and gitignored those patterns so they never recommit. Kept `data/`
+    (fictional sample — powers "Try with sample data" + tests). Tests 14/14.
+- next: Antigravity — `pip install -r requirements.txt` picks up fastapi/uvicorn. Run `python app.py`
+  → http://127.0.0.1:8000. To use vision in the web flow, ensure Ollama + the vision model are present
+  (the ③ button does it). Consider wiring vision into `run_pipeline.py`'s report export already exists.
+- blocked/notes: HF key + Tinder token are per-machine (.env / pasted), not in git. On the work
+  machine the Tinder photo CDN is blocked so the vision toggle no-ops there (works on home network).
+
 ## 2026-06-02 — office laptop / Antigravity
 - did: Completed end-to-end local multimodal vision integration with live profile coaching pipeline!
   * **Resource Optimization:** Switched to the ultra-lightweight **`moondream`** (828 MB) model in Ollama to accommodate the laptop's 8 GB RAM and GeForce MX450 GPU (2 GB VRAM). Pruned all heavy models (like `phi4-mini:latest`), saving 2.5 GB.

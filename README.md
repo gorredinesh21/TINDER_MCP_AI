@@ -1,12 +1,37 @@
 # Tinder AI Coach
 
-AI that **standardizes a dating profile** and **drafts messages** using Claude + a
-research-backed knowledge pack tuned for the Indian market.
+AI that **standardizes a dating profile** and **drafts messages** using open LLMs
+(Hugging Face API or a local model via Ollama) + a research-backed knowledge pack tuned
+for the Indian market.
 
 > **Design stance (read this).** The AI optimizes *your own* profile fully, and it
 > *drafts* messages — but **you send them**. It is deliberately not built to silently
 > auto-message your matches: that deceives people who didn't consent to a bot, and
 > automating actions against Tinder gets accounts banned. See `knowledge/dating_profile_kb.md` §5.
+
+## 🚀 Quick start — web dashboard (easiest, no coding)
+
+A local web app: paste your Tinder token in the page, get a clean coach report. Runs on
+`127.0.0.1` so your token never leaves your machine and is never stored.
+
+```bash
+git clone https://github.com/gorredinesh21/TINDER_MCP_AI.git
+cd TINDER_MCP_AI
+python -m venv .venv
+# Windows:  .\.venv\Scripts\Activate.ps1   |  macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env          # then paste your HUGGINGFACEHUB_API_TOKEN into .env
+python app.py                 # open http://127.0.0.1:8000
+```
+
+In the page: paste your **Tinder X-Auth-Token** (the page shows how to get it) and click
+**Analyze**, or click **Try with sample data** to see it work without a token. You get scores,
+a rewritten bio, sharper prompt answers, a photo plan, and what's missing — and can download the
+improved profile JSON.
+
+- **HF API key** → goes in `.env` once (free key from huggingface.co/settings/tokens).
+- **Tinder token** → pasted in the page each session (it expires; grab a fresh one when needed).
+- No HF key? Set `LLM_BACKEND=ollama` in `.env` and run a small local model instead (see below).
 
 ## Architecture
 

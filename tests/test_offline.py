@@ -96,6 +96,46 @@ def test_connector_requires_token():
         TinderConnector(auth_token=None)
 
 
+def test_setup_detect_os():
+    from setup_env import detect_os
+    assert detect_os() in ("windows", "macos", "linux")
+
+
+def test_setup_error_classifier():
+    """The if/else 'knowledge' that turns raw failures into actionable hints."""
+    from setup_env import classify
+    assert "network" in classify("curl: (28) Failed to connect: timed out").lower()
+    assert classify("write error: no space left on device")        # disk
+    assert classify("'ollama' is not recognized as a command")     # PATH
+    assert classify("Error: access is denied")                     # permission
+    assert classify("totally fine, no errors here") == ""          # clean -> no false hint
+
+
+def _web_client():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root for `import app`
+    from fastapi.testclient import TestClient
+    import app as webapp
+    return TestClient(webapp.app)
+
+
+def test_web_index_served():
+    r = _web_client().get("/")
+    assert r.status_code == 200 and "Tinder AI Coach" in r.text
+
+
+def test_web_health_reports_backend():
+    body = _web_client().get("/api/health").json()
+    assert "backend" in body and "model" in body
+
+
+def test_web_analyze_requires_token():
+    # no token + no sample -> friendly 400, never touches the LLM
+    r = _web_client().post("/api/analyze", json={})
+    assert r.status_code == 400
+
+
 def test_vision_offline(monkeypatch):
     """Verify TinderVision schema updates and offline mock description generation."""
     monkeypatch.setenv("TESTING_OFFLINE", "true")

@@ -12,3 +12,7 @@ langchain-ollama>=0.2
 
 # Connector — vendored tinder.py (src/vendor/tinder) talks to api.gotinder.com over HTTP
 requests>=2.31
+
+# Web dashboard (python app.py -> http://127.0.0.1:8000)
+fastapi>=0.110
+uvicorn[standard]>=0.29

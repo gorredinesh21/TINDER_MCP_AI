@@ -4,3 +4,9 @@ __pycache__/
 .venv/
 venv/
 data/private/
+
+# Generated profile artifacts — contain REAL personal data, never commit
+extracted_profile_*.json
+improved_profile_*.json
+analyzed_profile_*.json
+TINDER_COACH_REPORT.md

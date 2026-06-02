@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tinder AI Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @property --v { syntax:'<number>'; inherits:false; initial-value:0; }
+  :root{
+    --bg:#0a0810; --ink:#fdeef0; --muted:#b39aa3; --line:rgba(255,120,140,.14);
+    --glass:rgba(30,18,26,.55); --glass2:rgba(40,22,32,.5);
+    --flame:linear-gradient(115deg,#fd297b 0%,#ff4d5e 45%,#ff8c42 100%);
+    --good:#2fe6a0; --warn:#ffc24b; --bad:#ff5a6e; --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:#0a0810;color:var(--ink);overflow-x:hidden;
+    font:15px/1.6 "Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  h1,h2,.brand,.name,.btn,.ring i,.chip,.tag{font-family:"Space Grotesk","Plus Jakarta Sans",sans-serif}
+  .toggle{display:inline-flex;align-items:center;gap:9px;margin-top:14px;font-size:13.5px;color:var(--muted);cursor:pointer;user-select:none}
+  .toggle input{appearance:none;-webkit-appearance:none;width:42px;height:24px;min-width:42px;border-radius:999px;
+    background:rgba(255,255,255,.12);border:1px solid var(--line);position:relative;cursor:pointer;transition:.25s;flex:0 0 auto}
+  .toggle input::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.25s}
+  .toggle input:checked{background:var(--flame);border-color:transparent}
+  .toggle input:checked::after{left:20px}
+  .status{font-size:12.5px;margin-top:12px;display:flex;align-items:center;gap:8px}
+  .status .led{width:9px;height:9px;border-radius:50%;background:#6b5560;box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+  .status.on .led{background:var(--good);box-shadow:0 0 10px var(--good)}
+  .step{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--flame);
+    color:#fff;font-weight:800;font-size:13px;margin-right:9px;vertical-align:middle;font-family:"Space Grotesk"}
+  /* living background */
+  .bg{position:fixed;inset:0;z-index:-2;overflow:hidden;background:#0a0810}
+  .blob{position:absolute;width:55vw;height:55vw;border-radius:50%;filter:blur(90px);opacity:.55;
+    background:radial-gradient(circle at 30% 30%,#fd297b,transparent 60%);animation:float 18s ease-in-out infinite}
+  .blob.b2{right:-10vw;top:-10vw;background:radial-gradient(circle at 30% 30%,#ff5864,transparent 60%);animation-delay:-6s}
+  .blob.b3{left:-10vw;bottom:-15vw;background:radial-gradient(circle at 30% 30%,#ff8c42,transparent 60%);animation-delay:-12s}
+  .grain{position:fixed;inset:0;z-index:-1;opacity:.04;pointer-events:none;
+    background-image:radial-gradient(#fff 1px,transparent 1px);background-size:3px 3px}
+  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(6vw,4vh) scale(1.1)}66%{transform:translate(-5vw,-3vh) scale(.95)}}
+
+  .wrap{max-width:940px;margin:0 auto;padding:30px 20px 90px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:.3px}
+  .flame{width:34px;height:34px;border-radius:11px;background:var(--flame);display:grid;place-items:center;font-size:18px;
+    box-shadow:0 6px 20px rgba(253,41,123,.45);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 6px 20px rgba(253,41,123,.45)}50%{transform:scale(1.08);box-shadow:0 8px 32px rgba(255,88,100,.7)}}
+  .gtext{background:var(--flame);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:shift 5s linear infinite}
+  @keyframes shift{to{background-position:200% center}}
+  .badge{font-size:12px;color:var(--muted);background:var(--glass);border:1px solid var(--line);
+    padding:7px 12px;border-radius:999px;white-space:nowrap;backdrop-filter:blur(10px)}
+
+  .card{background:var(--glass);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin:16px 0;
+    backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(255,255,255,.04),0 20px 50px rgba(0,0,0,.35);
+    transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s,border-color .3s}
+  .card:hover{transform:translateY(-3px);border-color:rgba(255,120,140,.3);box-shadow:0 28px 70px rgba(253,41,123,.18)}
+  h1{font-size:30px;line-height:1.15;margin:0 0 8px;font-weight:800;letter-spacing:-.5px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.16em;color:#ff7a8c;margin:0 0 16px;font-weight:700}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .row{display:flex;gap:11px;flex-wrap:wrap}
+  input,select{flex:1;min-width:220px;background:var(--glass2);border:1px solid var(--line);color:var(--ink);
+    border-radius:13px;padding:14px 15px;font-size:15px;outline:none;transition:.25s}
+  input:focus,select:focus{border-color:#ff5864;box-shadow:0 0 0 4px rgba(255,88,100,.18)}
+  input::placeholder{color:#8a7079}
+  button{cursor:pointer;border:0;border-radius:13px;padding:14px 22px;font-size:15px;font-weight:700;transition:.22s;position:relative;overflow:hidden}
+  .btn{background:var(--flame);background-size:160% auto;color:#fff;box-shadow:0 8px 24px rgba(253,41,123,.4)}
+  .btn:hover{background-position:right center;transform:translateY(-2px) scale(1.02);box-shadow:0 12px 34px rgba(255,88,100,.6)}
+  .btn:active{transform:translateY(0) scale(.99)}
+  .btn::after{content:"";position:absolute;top:0;left:-120%;width:60%;height:100%;
+    background:linear-gradient(120deg,transparent,rgba(255,255,255,.35),transparent);transition:.5s}
+  .btn:hover::after{left:130%}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);box-shadow:none}
+  .btn.ghost:hover{border-color:#ff5864;background:rgba(255,88,100,.08);transform:translateY(-2px)}
+  .note{font-size:12.5px;color:var(--muted);margin-top:14px}
+  code{background:rgba(255,120,140,.12);padding:2px 6px;border-radius:6px;font-size:12.5px}
+  details{margin-top:14px;font-size:13.5px;color:var(--muted)}
+  details summary{cursor:pointer;color:var(--ink);font-weight:600}
+  details ol{margin:8px 0 0;padding-left:18px} details li{margin:4px 0}
+  .hidden{display:none}
+
+  .load{display:flex;align-items:center;gap:16px}
+  .spin{width:26px;height:26px;border:3px solid rgba(255,120,140,.2);border-top-color:#ff5864;border-radius:50%;animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{border-color:rgba(255,90,110,.5);background:rgba(50,16,24,.6)}
+
+  /* score rings */
+  .scores{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .score{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 6px}
+  .ring{--v:0;--c:var(--good);width:122px;height:122px;border-radius:50%;display:grid;place-items:center;
+    background:conic-gradient(var(--c) calc(var(--v)*1%),rgba(255,255,255,.06) 0);transition:--v 1.1s cubic-bezier(.2,.8,.2,1);
+    filter:drop-shadow(0 0 12px color-mix(in srgb,var(--c) 45%,transparent))}
+  .ring i{width:94px;height:94px;border-radius:50%;background:#140b12;display:grid;place-items:center;
+    font-style:normal;font-weight:800;font-size:28px}
+  .score span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+
+  .phead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .phead .name{font-size:24px;font-weight:800}
+  .pill{font-size:12px;padding:5px 12px;border-radius:999px;background:var(--glass2);border:1px solid var(--line);color:var(--muted)}
+  .pill.ok{color:#06231a;background:var(--good);border-color:transparent;font-weight:800}
+
+  .hl{border:1px solid rgba(255,120,140,.35);background:linear-gradient(160deg,rgba(60,20,40,.6),rgba(30,16,24,.5))}
+  .biotext{font-size:18px;line-height:1.55;margin:6px 0 14px}
+  .stack{display:grid;gap:13px}
+  .item{background:var(--glass2);border:1px solid var(--line);border-radius:14px;padding:16px;transition:.25s}
+  .item:hover{transform:translateX(4px);border-color:rgba(255,120,140,.32);box-shadow:-4px 0 0 #ff5864}
+  .chip{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+    padding:4px 11px;border-radius:999px;background:rgba(255,88,100,.16);color:#ff8c9a;border:1px solid rgba(255,120,140,.3)}
+  .meta{font-size:12px;color:var(--muted);margin-top:9px}
+  .why{font-size:13px;color:var(--muted);margin-top:9px;border-left:2px solid #ff5864;padding-left:11px}
+  .qa .q{font-size:12px;color:#ff7a8c;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .qa .old{color:var(--bad);text-decoration:line-through;opacity:.6;margin-top:4px}
+  .qa .new{color:var(--ink);font-weight:600;font-size:15.5px;margin-top:4px}
+  .copy{font-size:12px;padding:8px 13px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--ink)}
+  .copy:hover{border-color:#ff5864;background:rgba(255,88,100,.12)}
+
+  .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:13px}
+  .photo{background:var(--glass2);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.28s}
+  .photo:hover{transform:translateY(-4px) scale(1.02);border-color:rgba(255,120,140,.4);box-shadow:0 16px 30px rgba(253,41,123,.25)}
+  .photo img{width:100%;height:155px;object-fit:cover;display:block;background:#1a0f16}
+  .photo .pb{padding:11px}
+  .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px}
+  .tag.keep{background:rgba(47,230,160,.16);color:var(--good)} .tag.drop{background:rgba(255,90,110,.16);color:var(--bad)}
+  .small{font-size:12px;color:var(--muted);margin-top:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .gap{font-size:13px;background:rgba(255,140,66,.12);border:1px solid rgba(255,140,66,.3);color:#ffb98a;padding:7px 13px;border-radius:999px;transition:.2s}
+  .gap:hover{transform:scale(1.05);background:rgba(255,140,66,.2)}
+  .order{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--muted)}
+
+  .console{margin-top:16px;background:rgba(8,5,10,.85);border:1px solid var(--line);border-radius:14px;padding:16px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;max-height:360px;overflow:auto;white-space:pre-wrap}
+  .console .l{color:#9a8089} .console .ok{color:var(--good)} .console .warn{color:var(--warn)}
+  .console .bad{color:var(--bad)} .console .head{color:var(--ink);font-weight:700}
+  .console .hint{color:#ffb98a;background:rgba(255,140,66,.1);border-left:2px solid #ff8c42;padding:5px 9px;border-radius:5px;display:block;margin:3px 0}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--flame);color:#fff;
+    font-weight:800;padding:12px 20px;border-radius:12px;opacity:0;transition:.3s;pointer-events:none;box-shadow:0 10px 30px rgba(253,41,123,.5)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  #results.enter>*{animation:fadeUp .55s cubic-bezier(.2,.8,.2,1) both}
+  #results.enter>*:nth-child(1){animation-delay:.02s}
+  #results.enter>*:nth-child(2){animation-delay:.09s}
+  #results.enter>*:nth-child(3){animation-delay:.16s}
+  #results.enter>*:nth-child(4){animation-delay:.23s}
+  #results.enter>*:nth-child(5){animation-delay:.30s}
+  #results.enter>*:nth-child(6){animation-delay:.37s}
+  #results.enter>*:nth-child(7){animation-delay:.44s}
+  @media(max-width:560px){.scores{grid-template-columns:1fr}h1{font-size:25px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="grain"></div>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span class="flame">🔥</span> <span class="gtext">Tinder AI Coach</span></div>
+    <div class="badge" id="backendBadge">checking backend…</div>
+  </div>
+
+  <!-- HERO -->
+  <div style="text-align:center;margin:4px 0 24px">
+    <h1>Make your profile <span class="gtext">impossible<br>to swipe left.</span></h1>
+    <p class="sub" style="max-width:640px;margin:10px auto 0;font-size:16px">A sharper bio, punchier prompts,
+      a photo plan, and exactly what's holding you back — powered by a big Hugging&nbsp;Face model.</p>
+  </div>
+
+  <!-- ① CONNECT -->
+  <div class="card" id="connectCard">
+    <h2><span class="step">1</span>Connect your AI engine</h2>
+    <p class="sub">The text brain (bio + prompts) runs on <b>Hugging&nbsp;Face</b> — bigger, smarter models than a
+      laptop can run. Paste a free key once and we save it to your local <code>.env</code>. Get one at
+      <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">huggingface.co/settings/tokens</a>.</p>
+    <div class="row">
+      <input type="password" id="hfKey" placeholder="hf_…  your Hugging Face API key" autocomplete="off" spellcheck="false" />
+      <button class="btn" id="saveKeyBtn">Save key</button>
+    </div>
+    <div class="status" id="hfStatus"><span class="led"></span><span>Checking…</span></div>
+  </div>
+
+  <!-- ② ANALYZE -->
+  <div class="card" id="inputCard">
+    <h2><span class="step">2</span>Analyze your profile</h2>
+    <p class="sub">Paste your Tinder <b>X-Auth-Token</b> (it changes each session). Used once to read your
+      profile — <b>never stored or logged</b>.</p>
+    <div class="row">
+      <input type="password" id="token" placeholder="Paste your Tinder X-Auth-Token…" autocomplete="off" spellcheck="false" />
+      <button class="btn" id="goBtn">Analyze ✨</button>
+    </div>
+    <div class="row" style="margin-top:11px">
+      <button class="btn ghost" id="sampleBtn">▶ Try with sample data</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="useVision" />
+      <span>Also analyze my photos with local vision <span id="visionHint"></span></span></label>
+    <details>
+      <summary>How do I get my X-Auth-Token?</summary>
+      <ol>
+        <li>Open <b>tinder.com</b> in your browser and log in.</li>
+        <li>Press <b>F12</b> → <b>Network</b> tab → filter for <code>api.gotinder.com</code>.</li>
+        <li>Click any request → <b>Headers</b> → copy the value of <code>X-Auth-Token</code>.</li>
+        <li>Paste it above. (Grab a fresh one if it expires.)</li>
+      </ol>
+    </details>
+  </div>
+
+  <!-- ③ LOCAL VISION SETUP -->
+  <div class="card">
+    <h2><span class="step">3</span>Photo vision — local &amp; free (optional)</h2>
+    <p class="sub" style="margin-bottom:16px">Your photos stay on your machine: a small vision model runs
+      locally via <b>Ollama</b> so the coach can actually <i>see</i> your pics. The text brain still uses
+      Hugging&nbsp;Face (step 1) — this is just for photos. Install the vision model once (downloads ~1&nbsp;GB). ☕</p>
+    <div class="row">
+      <select id="setupModel">
+        <option value="moondream">moondream — tiny, ~830 MB (8 GB RAM laptops)</option>
+        <option value="llava">llava — larger, ~4.7 GB (more detailed)</option>
+      </select>
+      <button class="btn" id="setupBtn">⚙ Set up local AI</button>
+    </div>
+    <div class="console hidden" id="setupConsole"></div>
+    <p class="note">Runs only known commands (download Ollama, pull the model). If your network blocks it
+      (common on office Wi-Fi) it says so, and you can switch to the HF key instead.</p>
+  </div>
+
+  <!-- LOADING -->
+  <div class="card hidden" id="loadingCard">
+    <div class="load"><div class="spin"></div>
+      <div><b id="loadMsg">Reading your profile…</b><div class="note" style="margin-top:2px">
+        The coach is running — this can take ~20–40s on the big model.</div></div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="card err hidden" id="errorCard"><b>Couldn't run the coach.</b><div id="errorMsg" style="margin-top:6px"></div></div>
+
+  <!-- RESULTS -->
+  <div id="results" class="hidden">
+    <div class="card">
+      <div class="phead">
+        <span class="name" id="pName"></span>
+        <span class="pill" id="pMeta"></span>
+        <span class="pill" id="pVerified"></span>
+      </div>
+      <div class="scores" style="margin-top:20px">
+        <div class="score"><div class="ring" id="ringOverall"><i id="numOverall">0</i></div><span>Overall</span></div>
+        <div class="score"><div class="ring" id="ringPhotos"><i id="numPhotos">0</i></div><span>Photos</span></div>
+        <div class="score"><div class="ring" id="ringBio"><i id="numBio">0</i></div><span>Bio</span></div>
+      </div>
+      <p class="sub" id="summary" style="margin:20px 0 0"></p>
+    </div>
+
+    <div class="card hl">
+      <h2>🔥 Recommended new bio</h2>
+      <div class="biotext" id="bioBest"></div>
+      <button class="copy" data-copy="bioBest">Copy bio</button>
+    </div>
+
+    <div class="card">
+      <h2>Bio options</h2>
+      <div class="stack" id="bioVariants"></div>
+    </div>
+
+    <div class="card" id="promptCard">
+      <h2>Sharper prompt answers</h2>
+      <div class="stack" id="prompts"></div>
+    </div>
+
+    <div class="card">
+      <h2>Photo plan</h2>
+      <div class="order" id="photoOrder" style="margin-bottom:13px"></div>
+      <div class="photos" id="photos"></div>
+    </div>
+
+    <div class="card">
+      <h2>What's missing</h2>
+      <div class="chips" id="gaps"></div>
+    </div>
+
+    <div class="row">
+      <button class="btn ghost" id="downloadBtn">⬇ Download improved profile (JSON)</button>
+      <button class="btn ghost" id="againBtn">↺ Analyze again</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let lastImproved = null;
+
+function color(v){ return v>=70 ? 'var(--good)' : v>=40 ? 'var(--warn)' : 'var(--bad)'; }
+function setRing(ringId, numId, v){
+  v = Math.max(0, Math.min(100, v|0));
+  const r = $(ringId); r.style.setProperty('--c', color(v));
+  requestAnimationFrame(()=>{ r.style.setProperty('--v', v); });   // animates the conic fill
+  const n = $(numId); const t0 = performance.now(), dur = 1100;     // count-up the number
+  (function tick(t){ const p = Math.min(1,(t-t0)/dur); n.textContent = Math.round(v*(p<1?(1-Math.pow(1-p,3)):1)); if(p<1) requestAnimationFrame(tick); })(t0);
+}
+function esc(s){ const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1400); }
+function show(el){ el.classList.remove('hidden'); }
+function hide(el){ el.classList.add('hidden'); }
+
+let HEALTH = {};
+function setText(el, t){ el.querySelector('span:last-child').textContent = t; }
+async function health(){
+  try{
+    const h = await (await fetch('/api/health')).json(); HEALTH = h;
+    $('backendBadge').textContent = `⚡ ${h.backend} · ${h.model||'?'}`;
+    const st = $('hfStatus'), connected = h.backend==='hf' && h.key_present;
+    st.classList.toggle('on', connected);
+    setText(st, connected ? `Connected — ${h.model}`
+      : (h.backend==='hf' ? 'No HF key yet — paste it above to connect.'
+                          : `Running local (${h.model}). Add an HF key for bigger, smarter models.`));
+    const vh = $('visionHint');
+    vh.textContent = h.vision_ready ? '(ready ✓)' : '(needs step 3)';
+    vh.style.color = h.vision_ready ? 'var(--good)' : '#ff8c9a';
+  }catch{ $('backendBadge').textContent = 'backend: unknown'; }
+}
+async function saveKey(){
+  const key = $('hfKey').value.trim(), btn = $('saveKeyBtn');
+  if(!key){ toast('Paste your HF key first'); return; }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try{
+    const res = await fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({hf_token:key})});
+    const d = await res.json(); if(!res.ok) throw new Error(d.detail || 'failed');
+    $('hfKey').value = ''; toast('Key saved 🔑'); await health();
+  }catch(e){ const st=$('hfStatus'); st.classList.remove('on'); setText(st, '✗ '+e.message); }
+  btn.disabled = false; btn.textContent = 'Save key';
+}
+
+async function analyze(useSample){
+  hide($('errorCard')); hide($('results')); $('results').classList.remove('enter');
+  show($('loadingCard'));
+  $('loadMsg').textContent = useSample ? 'Loading sample profile…' : 'Reading your profile…';
+  try{
+    const uv = $('useVision').checked;
+    const body = useSample ? {use_sample:true, use_vision:uv} : {token: $('token').value, use_vision:uv};
+    const res = await fetch('/api/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.detail || 'Request failed');
+    render(data);
+  }catch(e){
+    hide($('loadingCard'));
+    $('errorMsg').textContent = e.message;
+    show($('errorCard'));
+  }
+}
+
+function render(data){
+  hide($('loadingCard'));
+  const p = data.profile, r = data.report;
+  lastImproved = data.improved;
+
+  $('pName').textContent = p.name || 'Your profile';
+  $('pMeta').textContent = [p.age, p.city].filter(Boolean).join(' · ');
+  $('pVerified').textContent = p.verified ? '✓ Verified' : 'Not verified';
+  $('pVerified').className = 'pill' + (p.verified ? ' ok' : '');
+
+  $('summary').textContent = r.summary || '';
+  $('bioBest').textContent = (data.improved && data.improved.bio) || (r.bio_variants[0]||{}).text || '';
+
+  $('bioVariants').innerHTML = (r.bio_variants||[]).map((v,i)=>`
+    <div class="item">
+      <span class="chip">${esc(v.tone)}</span>
+      <div class="biotext" id="bv${i}" style="font-size:15.5px;margin:11px 0 0">${esc(v.text)}</div>
+      <div class="meta">${(v.char_count||v.text.length)} chars</div>
+      <div class="why">${esc(v.rationale)}</div>
+      <div style="margin-top:11px"><button class="copy" data-copy="bv${i}">Copy</button></div>
+    </div>`).join('');
+
+  const prompts = r.improved_prompts && r.improved_prompts.length ? r.improved_prompts : null;
+  if(prompts){
+    const oldByQ = {}; (p.prompts||[]).forEach(x=>oldByQ[x.q]=x.a);
+    $('prompts').innerHTML = prompts.map(pr=>`
+      <div class="item qa">
+        <div class="q">${esc(pr.q)}</div>
+        ${oldByQ[pr.q]?`<div class="old">${esc(oldByQ[pr.q])}</div>`:''}
+        <div class="new">${esc(pr.a)}</div>
+      </div>`).join('');
+    show($('promptCard'));
+  } else { hide($('promptCard')); }
+
+  $('photoOrder').textContent = (r.recommended_photo_order||[]).length
+    ? 'Recommended order:  ' + r.recommended_photo_order.join('  →  ') : '';
+  const byId = {}; (p.photos||[]).forEach(ph=>byId[ph.id]=ph);
+  $('photos').innerHTML = (r.photo_assessments||[]).map(a=>{
+    const ph = byId[a.photo_id]||{};
+    const img = ph.url ? `<img src="${esc(ph.url)}" loading="lazy" onerror="this.style.display='none'">` : '';
+    return `<div class="photo">${img}<div class="pb">
+      <span class="tag ${a.keep?'keep':'drop'}">${a.keep?('KEEP'+(a.suggested_slot?' · slot '+a.suggested_slot:'')):'DROP'}</span>
+      ${(a.strengths||[]).length?`<div class="small">✓ ${esc(a.strengths.join(', '))}</div>`:''}
+      ${(a.issues||[]).length?`<div class="small">✗ ${esc(a.issues.join(', '))}</div>`:''}
+    </div></div>`;
+  }).join('') || '<div class="note">No photo analysis available (vision is off in the web app).</div>';
+
+  $('gaps').innerHTML = (r.gaps||[]).map(g=>`<span class="gap">${esc(g)}</span>`).join('') || '<span class="note">None flagged. 🎉</span>';
+
+  const res = $('results');
+  show(res); res.classList.remove('enter'); void res.offsetWidth; res.classList.add('enter');
+  setRing('ringOverall','numOverall', r.overall_score);
+  setRing('ringPhotos','numPhotos', r.photo_score);
+  setRing('ringBio','numBio', r.bio_score);
+  res.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ---- local AI setup (streaming) ----
+function conLine(con, text, cls){ const s=document.createElement('span'); if(cls)s.className=cls; s.textContent=text+'\n'; con.appendChild(s); con.scrollTop=con.scrollHeight; }
+function onSetupEvent(ev, con){
+  if(ev.type==='log'){ if(ev.line) conLine(con, '  '+ev.line, 'l'); return; }
+  if(ev.type==='done'){ conLine(con, ev.ok?'✅ All set — local AI is ready. Pick the Ollama backend in .env and re-run.':'⚠ Setup incomplete — see the hints above.', ev.ok?'ok head':'warn head'); return; }
+  if(ev.type==='step'){
+    const icon={running:'▶',ok:'✓',warn:'⚠',error:'✗'}[ev.status]||'•';
+    const cls ={running:'l',ok:'ok',warn:'warn',error:'bad'}[ev.status]||'l';
+    conLine(con, `${icon} ${ev.name}${ev.msg?(' — '+ev.msg):''}`, cls+' head');
+    if(ev.hint) conLine(con, '↳ '+ev.hint, 'hint');
+  }
+}
+async function runSetup(){
+  const model = $('setupModel').value, con = $('setupConsole'), btn=$('setupBtn');
+  con.innerHTML=''; show(con); btn.disabled=true; btn.textContent='Setting up… (downloads can take minutes)';
+  try{
+    const res = await fetch('/api/setup?model='+encodeURIComponent(model));
+    if(!res.ok || !res.body) throw new Error('setup endpoint unavailable');
+    const reader = res.body.getReader(), dec = new TextDecoder(); let buf='';
+    while(true){
+      const {value, done} = await reader.read(); if(done) break;
+      buf += dec.decode(value, {stream:true});
+      let nl; while((nl = buf.indexOf('\n')) >= 0){
+        const line = buf.slice(0,nl); buf = buf.slice(nl+1);
+        if(line.trim()){ try{ onSetupEvent(JSON.parse(line), con); }catch{} }
+      }
+    }
+  }catch(e){ conLine(con, '✗ '+e.message, 'bad head'); }
+  btn.disabled=false; btn.textContent='⚙ Set up local AI';
+}
+
+document.addEventListener('click', e=>{
+  const c = e.target.getAttribute && e.target.getAttribute('data-copy');
+  if(c){ navigator.clipboard.writeText($(c).textContent.trim()); toast('Copied! 🔥'); }
+});
+$('setupBtn').onclick = runSetup;
+$('saveKeyBtn').onclick = saveKey;
+$('hfKey').addEventListener('keydown', e=>{ if(e.key==='Enter') saveKey(); });
+$('goBtn').onclick = ()=>analyze(false);
+$('sampleBtn').onclick = ()=>analyze(true);
+$('token').addEventListener('keydown', e=>{ if(e.key==='Enter') analyze(false); });
+$('againBtn').onclick = ()=>{ hide($('results')); $('inputCard').scrollIntoView({behavior:'smooth'}); };
+$('downloadBtn').onclick = ()=>{
+  if(!lastImproved) return;
+  const blob = new Blob([JSON.stringify(lastImproved,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'improved_profile.json'; a.click();
+};
+health();
+</script>
+</body>
+</html>
