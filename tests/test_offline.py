@@ -124,6 +124,16 @@ def test_prompt_writes_require_confirm():
         c.update_my_prompt("p", "q", "a", confirm=False)
 
 
+def test_suggest_prompts_empty_catalog_is_offline():
+    """With no catalog, suggest_prompts short-circuits without any LLM/network call."""
+    os.environ["LLM_BACKEND"] = "ollama"
+    from coach import DatingCoach
+    from schema import Profile
+    c = DatingCoach()
+    res = c.suggest_prompts(Profile(name="X", age=25, city="Y"), [], n=3)
+    assert res.suggestions == [] and "catalog" in res.notes.lower()
+
+
 def _web_client():
     import sys
     from pathlib import Path
@@ -146,6 +156,12 @@ def test_web_health_reports_backend():
 def test_web_analyze_requires_token():
     # no token + no sample -> friendly 400, never touches the LLM
     r = _web_client().post("/api/analyze", json={})
+    assert r.status_code == 400
+
+
+def test_web_suggest_prompts_requires_token():
+    os.environ.pop("TINDER_X_AUTH_TOKEN", None)
+    r = _web_client().post("/api/suggest-prompts", json={"token": ""})
     assert r.status_code == 400
 
 

@@ -24,7 +24,8 @@ from typing import Type, TypeVar
 from pydantic import BaseModel, ValidationError
 
 from llm import LLM, make_llm
-from schema import Profile, Match, ProfileReport, DraftSet, ImprovementResult
+from schema import (Profile, Match, ProfileReport, DraftSet, ImprovementResult,
+                    PromptSuggestionSet)
 
 KB_PATH = Path(__file__).resolve().parent.parent / "knowledge" / "dating_profile_kb.md"
 
@@ -54,6 +55,18 @@ pet, drinking/smoking, "looking for", love style, education, etc.). USE IT.
   shot", "no job listed", intent vs 'Looking for' mismatch).
 - Score photos and bio with the rubric's formulas (0-100); set overall to your weighted judgement; be
   honest (don't inflate). Flag cliches, negativity, and anything that hurts in the India safety-first market."""
+
+PROMPT_SUGGEST_TASK = """You are a high-effort dating-profile coach for the Indian market. Using the \
+knowledge pack's PROMPTS rubric (§3), pick the best prompt QUESTIONS for this user from the provided
+catalog and write a great answer for each.
+
+- Choose questions whose `question_id` EXISTS in the catalog below — never invent an id.
+- Prefer questions that let the user show a SPECIFIC true detail from their data (interests, descriptors,
+  job, existing prompts). Avoid questions that would force a generic answer.
+- Each answer: specific, vivid, reply-inviting (NO one-word/generic answers), built ONLY from true data —
+  never fabricate. Assign role variety across the set (one funny, one thoughtful, one cute/warm).
+- No clichés, no negativity, nothing sexual. Don't copy knowledge-pack examples verbatim.
+- Return exactly the requested number of suggestions, each with question_id, question_text, answer, rationale."""
 
 REPLY_TASK = """You are a dating-message assistant for the Indian market. Using ONLY the \
 knowledge pack above as your rubric, DRAFT replies for the user to review and send.
@@ -134,6 +147,37 @@ class DatingCoach:
         report = self.standardize_profile(profile)
         improved = apply_report(profile, report, bio_choice=bio_choice)
         return ImprovementResult(report=report, improved_profile=improved)
+
+    def suggest_prompts(self, profile: Profile, catalog: list[dict], n: int = 3) -> PromptSuggestionSet:
+        """AI picks the best prompt QUESTIONS from the live catalog and drafts answers from the
+        user's real data. `catalog` = [{question_id, question_text}, ...] (from the connector).
+        Human reviews/edits, then create_prompt() writes the chosen ones. The AI never auto-writes.
+        """
+        if not catalog:
+            return PromptSuggestionSet(suggestions=[], notes="No prompt catalog available to choose from.")
+
+        # Exclude questions the user already uses, so we suggest fresh ones.
+        used = {p.get("id") or p.get("question_id") for p in profile.prompts}
+        pool = [c for c in catalog if c.get("question_id") not in used] or catalog
+
+        system = self._system(PROMPT_SUGGEST_TASK, PromptSuggestionSet)
+        user = (
+            "USER PROFILE (use ONLY these true facts):\n" + profile.model_dump_json(indent=2)
+            + "\n\nAVAILABLE PROMPT CATALOG (pick question_id ONLY from this list):\n"
+            + json.dumps(pool, ensure_ascii=False)
+            + f"\n\nReturn exactly {n} suggestions."
+        )
+        result = _parse(PromptSuggestionSet, self.llm.generate(system, user))
+
+        # Validate against the catalog: drop hallucinated ids, fix question_text from the source of truth.
+        by_id = {c["question_id"]: c["question_text"] for c in catalog}
+        valid = []
+        for s in result.suggestions:
+            if s.question_id in by_id:
+                s.question_text = by_id[s.question_id]
+                valid.append(s)
+        result.suggestions = valid[:n]
+        return result
 
     def draft_replies(self, match: Match, my_profile: Profile) -> DraftSet:
         system = self._system(REPLY_TASK, DraftSet)

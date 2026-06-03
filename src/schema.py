@@ -120,3 +120,15 @@ class DraftSet(BaseModel):
     match_summary: str = Field(description="1-2 lines on what stood out about the match")
     drafts: list[MessageDraft] = Field(description="2-3 options of different tones")
     notes: str = Field(description="any safety/pacing note for the user before sending")
+
+
+class PromptSuggestion(BaseModel):
+    question_id: str = Field(description="MUST be an id from the provided catalog, e.g. 'pro_5'")
+    question_text: str
+    answer: str = Field(description="a vivid, specific answer built from the user's real data")
+    rationale: str = Field(description="why this question + answer fits, tied to the rubric")
+
+
+class PromptSuggestionSet(BaseModel):
+    suggestions: list[PromptSuggestion]
+    notes: str = ""

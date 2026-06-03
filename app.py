@@ -92,6 +92,11 @@ class CreatePromptRequest(BaseModel):
     answer_text: str
 
 
+class SuggestPromptsRequest(BaseModel):
+    token: str
+    n: int = 3
+
+
 def _update_env(updates: dict[str, str]) -> None:
     """Update/insert keys in .env without disturbing the rest. Local file, user's own machine."""
     env_path = ROOT / ".env"
@@ -282,6 +287,25 @@ def available_prompts(req: AvailablePromptsRequest) -> dict:
         raw = conn.fetch_available_prompts()
         return {"catalog": conn.parse_available_prompts(raw),
                 "endpoint_status": {u: r.get("status", r.get("error")) for u, r in raw.items()}}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/suggest-prompts")
+def suggest_prompts_ep(req: SuggestPromptsRequest) -> dict:
+    """AI picks prompt questions from the live catalog + drafts answers from the user's data.
+    Returns suggestions (human reviews/edits), the full catalog, and current prompts. No auto-write."""
+    try:
+        conn = TinderConnector(auth_token=req.token.strip())
+        catalog = conn.parse_available_prompts(conn.fetch_available_prompts())
+        profile = conn.get_my_profile()
+        sset = get_coach().suggest_prompts(profile, catalog, n=req.n)
+        return {
+            "suggestions": json.loads(sset.model_dump_json())["suggestions"],
+            "notes": sset.notes,
+            "catalog": catalog,
+            "current_prompts": profile.prompts,
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"{type(e).__name__}: {e}")
 

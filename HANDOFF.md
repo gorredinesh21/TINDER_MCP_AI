@@ -10,6 +10,39 @@ Format:
 - next: <what the other side should pick up>
 - blocked/notes: <anything needing a human or a decision>
 
+## 2026-06-03 (AI prompts) — desktop / Claude Code
+- did: Built the **AI prompt-suggestion engine** on top of Antigravity's verified endpoints.
+  • `coach.suggest_prompts(profile, catalog, n=3)` → `PromptSuggestionSet` — AI picks the best-fit
+    questions FROM the live catalog and drafts vivid answers from the user's real data (interests/
+    descriptors/job), following the knowledge-pack PROMPTS rubric. It validates every `question_id`
+    against the catalog (drops hallucinations), fixes `question_text` from the catalog, and excludes
+    questions the user already uses. AI never auto-writes — human reviews then create_prompt() writes.
+  • New endpoint `POST /api/suggest-prompts {token, n}` → fetches catalog + profile, runs the AI, returns
+    `{suggestions:[{question_id,question_text,answer,rationale}], notes, catalog:[{question_id,question_text}], current_prompts}`.
+  • schema: `PromptSuggestion`, `PromptSuggestionSet`. Tests 26/26.
+
+## ▶▶ TASK FOR ANTIGRAVITY (laptop) — wire the Prompts UI into the dashboard
+Goal: a "Prompts" card in `web/index.html` that uses the AI suggestions + lets the user publish them.
+The backend is DONE and live-verified; you only build the front-end + glue.
+
+API contracts (all POST, JSON; reuse the in-memory Tinder token the user already pasted in step ②):
+- `POST /api/suggest-prompts {token, n:3}` →
+  `{suggestions:[{question_id, question_text, answer, rationale}], notes, catalog:[{question_id, question_text}], current_prompts:[{q,a,id,...}]}`
+- `POST /api/create-prompt {token, question_id, answer_text}` → `{ok, detail, response}`  (creates/writes a prompt)
+- `POST /api/update-prompt {token, question_text, answer_text}` → updates an EXISTING prompt (now fixed)
+
+UI to build (match the existing flame theme + editable-field pattern used for bio variants):
+1. A new card "Prompts" in the results area. After analysis (or a "Suggest prompts" button), call
+   `/api/suggest-prompts`. Render each suggestion as: the question (with a `<select>` populated from
+   `catalog` so the user can swap the question), an editable `<textarea>` pre-filled with `answer`, the
+   `rationale` as helper text, and a **"Publish to Tinder 🔥"** button.
+2. Publish button → `POST /api/create-prompt {token, question_id:<selected>, answer_text:<edited>}`;
+   show a loading state + success toast (same UX as the bio "Update to Tinder" button).
+3. Show `current_prompts` somewhere (so the user sees what's already live). Tinder allows up to 3 prompts
+   (`max_prompts` in the raw payload) — surface that limit.
+4. Keep it human-in-the-loop: nothing publishes without the user clicking the button.
+- After wiring: run `pytest -q` (should stay green — UI is JS only), update this HANDOFF, push.
+
 ## 2026-06-03 — Antigravity (laptop)
 - did:
   - Discovered the working prompt catalog endpoint: `GET https://api.gotinder.com/v2/dynamicui/configuration/content?locale=en&component_id=prompts_text_editor_v2`.
