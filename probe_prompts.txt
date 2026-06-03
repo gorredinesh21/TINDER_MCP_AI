@@ -1,0 +1,119 @@
+dinesh@pop-os:~/coding/PROJECTS/TINDER_MCP_AI$ python3 src/probe_prompts.py 2afa0896-d373-4385-bb01-e4177bf617f4
+=== YOUR CURRENT PROMPTS ===
+[
+  {
+    "id": "pro_4",
+    "question_text": "The key to my heart is…",
+    "answer_text": "Food and sports"
+  },
+  {
+    "id": "pro_14",
+    "question_text": "I can beat you in a game of…",
+    "answer_text": "Badminton"
+  }
+]
+(2 prompt(s) currently on your profile)
+
+=== AVAILABLE-PROMPTS ENDPOINT PROBE ===
+
+[404] https://api.gotinder.com/v2/profile/prompts
+""
+
+[200] https://api.gotinder.com/v2/profile?include=available_prompts
+{
+  "meta": {
+    "status": 200
+  },
+  "data": {}
+}
+
+[200] https://api.gotinder.com/v2/profile?include=prompts
+{
+  "meta": {
+    "status": 200
+  },
+  "data": {}
+}
+
+[404] https://api.gotinder.com/v2/prompts
+""
+
+[404] https://api.gotinder.com/v2/profile/promptlist
+""
+
+[404] https://api.gotinder.com/v2/dynamic-ui/configuration?include=prompts
+""
+
+=== PARSED QUESTION CATALOG (best-effort) ===
+[]
+(0 questions parsed)
+dinesh@pop-os:~/coding/PROJECTS/TINDER_MCP_AI$ python3 src/probe_prompts.py 2afa0896-d373-4385-bb01-e4177bf617f4 --create pro_5 "abracadabra"
+=== YOUR CURRENT PROMPTS ===
+[
+  {
+    "id": "pro_4",
+    "question_text": "The key to my heart is…",
+    "answer_text": "Food and sports"
+  },
+  {
+    "id": "pro_14",
+    "question_text": "I can beat you in a game of…",
+    "answer_text": "Badminton"
+  }
+]
+(2 prompt(s) currently on your profile)
+
+=== AVAILABLE-PROMPTS ENDPOINT PROBE ===
+
+[404] https://api.gotinder.com/v2/profile/prompts
+""
+
+[200] https://api.gotinder.com/v2/profile?include=available_prompts
+{
+  "meta": {
+    "status": 200
+  },
+  "data": {}
+}
+
+[200] https://api.gotinder.com/v2/profile?include=prompts
+{
+  "meta": {
+    "status": 200
+  },
+  "data": {}
+}
+
+[404] https://api.gotinder.com/v2/prompts
+""
+
+[404] https://api.gotinder.com/v2/profile/promptlist
+""
+
+[404] https://api.gotinder.com/v2/dynamic-ui/configuration?include=prompts
+""
+
+=== PARSED QUESTION CATALOG (best-effort) ===
+[]
+(0 questions parsed)
+
+=== CREATING PROMPT  question_id=pro_5 ===
+{
+  "meta": {
+    "status": 200
+  },
+  "data": {}
+}
+→ now re-checking your prompts:
+[
+  {
+    "id": "pro_4",
+    "question_text": "The key to my heart is…",
+    "answer_text": "Food and sports"
+  },
+  {
+    "id": "pro_14",
+    "question_text": "I can beat you in a game of…",
+    "answer_text": "Badminton"
+  }
+]
