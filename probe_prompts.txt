@@ -1,4 +1,3 @@
-dinesh@pop-os:~/coding/PROJECTS/TINDER_MCP_AI$ python3 src/probe_prompts.py 2afa0896-d373-4385-bb01-e4177bf617f4 --write-test pro_4 "TESTXYZ"
 === YOUR CURRENT PROMPTS ===
 [
   {
@@ -10,13 +9,44 @@ dinesh@pop-os:~/coding/PROJECTS/TINDER_MCP_AI$ python3 src/probe_prompts.py 2afa
     "id": "pro_14",
     "question_text": "I can beat you in a game of…",
     "answer_text": "Badminton"
+  },
+  {
+    "id": "pro_47",
+    "question_text": "Perks of dating me...",
+    "answer_text": "you will have one of th most intelectual conversations"
   }
 ]
-(2 prompt(s) currently on your profile)
+(3 prompt(s) currently on your profile)
+
+=== RAW user_prompts (ALL fields — looking for position / instance id we may be dropping) ===
+{
+  "section_name": "Prompts",
+  "max_prompts": 3,
+  "prompts": [
+    {
+      "id": "pro_4",
+      "answer_text": "Food and sports",
+      "question_text": "The key to my heart is…",
+      "image_url": "https://tinder-static-assets-prod.s3.amazonaws.com/prompts/icons/prompt_question.png"
+    },
+    {
+      "id": "pro_14",
+      "answer_text": "Badminton",
+      "question_text": "I can beat you in a game of…",
+      "image_url": "https://tinder-static-assets-prod.s3.amazonaws.com/prompts/icons/prompt_question.png"
+    },
+    {
+      "id": "pro_47",
+      "answer_text": "you will have one of th most intelectual conversations",
+      "question_text": "Perks of dating me...",
+      "image_url": "https://tinder-static-assets-prod.s3.amazonaws.com/prompts/icons/prompt_question.png"
+    }
+  ]
+}
 
 === AVAILABLE-PROMPTS ENDPOINT PROBE ===
 
-[404] https://api.gotinder.com/v2/profile/prompts
+[404] https://data.gotinder.com/v3/publish/app/json
 ""
 
 [200] https://api.gotinder.com/v2/profile?include=available_prompts
@@ -27,77 +57,185 @@ dinesh@pop-os:~/coding/PROJECTS/TINDER_MCP_AI$ python3 src/probe_prompts.py 2afa
   "data": {}
 }
 
-[200] https://api.gotinder.com/v2/profile?include=prompts
+[200] https://api.gotinder.com/v2/profile?locale=en&include=available_descriptors
 {
   "meta": {
     "status": 200
   },
-  "data": {}
-}
+  "data": {
+    "available_descriptors": [
+      {
+        "prompt": "Bring your best self forward by adding more about you",
+        "descriptors": [
+          {
+            "id": "de_1",
+            "name": "Zodiac",
+            "prompt": "What is your zodiac sign?",
+            "type": "single_selection_set",
+            "choices": [
+              {
+                "id": "1",
+                "name": "Capricorn"
+              },
+              {
+                "id": "2",
+                "name": "Aquarius"
+              },
+              {
+                "id": "3",
+                "name": "Pisces"
+              },
+              {
+                "id": "4",
+                "name": "Aries"
+              },
+              {
+                "id": "5",
+                "name": "Taurus"
+              },
+              {
+                "id": "6",
+                "name": "Gemini"
+              },
+              {
+                "id": "7",
+                "name": "Cancer"
+              },
+              {
+                "id": "8",
+                "name": "Leo"
+              },
+              {
+                "id": "9",
+                "name": "Virgo"
+    
+… (truncated)
 
-[404] https://api.gotinder.com/v2/prompts
+[404] https://api.gotinder.com/v2/profile/prompts
 ""
 
-[404] https://api.gotinder.com/v2/profile/promptlist
+[404] https://api.gotinder.com/v2/prompts
 ""
 
 [404] https://api.gotinder.com/v2/dynamic-ui/configuration?include=prompts
 ""
 
 === PARSED QUESTION CATALOG (best-effort) ===
-[]
-(0 questions parsed)
+[
+  {
+    "question_id": "de_1",
+    "question_text": "What is your zodiac sign?"
+  },
+  {
+    "question_id": "1",
+    "question_text": "Capricorn"
+  },
+  {
+    "question_id": "2",
+    "question_text": "Aquarius"
+  },
+  {
+    "question_id": "3",
+    "question_text": "Pisces"
+  },
+  {
+    "question_id": "4",
+    "question_text": "Aries"
+  },
+  {
+    "question_id": "5",
+    "question_text": "Taurus"
+  },
+  {
+    "question_id": "6",
+    "question_text": "Gemini"
+  },
+  {
+    "question_id": "7",
+    "question_text": "Cancer"
+  },
+  {
+    "question_id": "8",
+    "question_text": "Leo"
+  },
+  {
+    "question_id": "9",
+    "question_text": "Virgo"
+  },
+  {
+    "question_id": "10",
+    "question_text": "Libra"
+  },
+  {
+    "question_id": "11",
+    "question_text": "Scorpio"
+  },
+  {
+    "question_id": "12",
+    "question_text": "Sagittarius"
+  },
+  {
+    "question_id": "de_9",
+    "question_text": "What is your education level?"
+  },
+  {
+    "question_id": "de_33",
+    "question_text": "Do you want children?"
+  },
+  {
+    "question_id": "de_2",
+    "question_text": "What is your communication style?"
+  },
+  {
+    "question_id": "de_35",
+    "question_text": "How do you receive love?"
+  },
+  {
+    "question_id": "de_3",
+    "question_text": "Do you have any pets?"
+  },
+  {
+    "question_id": "13",
+    "question_text": "Hamster"
+  },
+  {
+    "question_id": "14",
+    "question_text": "Rabbit"
+  },
+  {
+    "question_id": "16",
+    "question_text": "Want a pet"
+  },
+  {
+    "question_id": "17",
+    "question_text": "Allergic to pets"
+  },
+  {
+    "question_id": "de_22",
+    "question_text": "How often do you drink?"
+  },
+  {
+    "question_id": "de_11",
+    "question_text": "How often do you smoke?"
+  },
+  {
+    "question_id": "de_10",
+    "question_text": "Do you workout?"
+  },
+  {
+
+… (truncated)
+(26 questions parsed)
 
 === WRITE TEST on pro_4 (target answer: 'TESTXYZ') ===
+[200] POST https://api.gotinder.com/v2/profile  payload_keys=['user']  -> answer now 'Food and sports'  ✗ no change
+[200] POST https://api.gotinder.com/profile  payload_keys=['user']  -> answer now 'Food and sports'  ✗ no change
+[200] POST https://api.gotinder.com/v2/profile?locale=en  payload_keys=['user']  -> answer now 'Food and sports'  ✗ no change
 [200] POST https://api.gotinder.com/v2/profile  payload_keys=['user_prompts']  -> answer now 'Food and sports'  ✗ no change
-[200] POST https://api.gotinder.com/profile  payload_keys=['user_prompts']  -> answer now 'Food and sports'  ✗ no change
 [200] POST https://api.gotinder.com/v2/profile  payload_keys=['prompts']  -> answer now 'Food and sports'  ✗ no change
-[404] PUT https://api.gotinder.com/v2/profile/user_prompts  payload_keys=['prompts']  -> answer now 'Food and sports'  ✗ no change
 None persisted — the prompt write needs a different endpoint (capture it from tinder.com DevTools).
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-urls for prompts fetching 
-
-https://o825645.ingest.us.sentry.io/api/4510239354781696/envelope/?sentry_version=7&sentry_key=9e103d7400953bf11e282dcd6da8161a&sentry_client=sentry.javascript.react%2F10.21.0
-
-/api/4510239354781696/envelope/?sentry_version=7&sentry_key=9e103d7400953bf11e282dcd6da8161a&sentry_client=sentry.javascript.react%2F10.21.0
-
-https://o825645.ingest.us.sentry.io/api/4510239354781696/envelope/?sentry_version=7&sentry_key=9e103d7400953bf11e282dcd6da8161a&sentry_client=sentry.javascript.react%2F10.21.0
-
-
-
-/api/4510239354781696/envelope/?sentry_version=7&sentry_key=9e103d7400953bf11e282dcd6da8161a&sentry_client=sentry.javascript.react%2F10.21.0
-
-
-https://data.gotinder.com/v3/publish/app/json
-
-
-https://api.gotinder.com/v2/profile?locale=en&include=boost%2Cfeature_access
-Request Method
-
-
-https://data.gotinder.com/v3/publish/app/json
-
-https://api.gotinder.com/v2/profile?locale=en&include=account%2Cavailable_descriptors%2Cboost%2Cbouncerbypass%2Ccontact_cards%2Cemail_settings%2Cfeature_access%2Cinstagram%2Clikes%2Cprofile_meter%2Cnotifications%2Cmisc_merchandising%2Cofferings%2Conboarding%2Cpaywalls%2Cplus_control%2Cpurchase%2Creadreceipts%2Cspotify%2Csuper_likes%2Ctinder_u%2Ctravel%2Ctutorials%2Cuser%2Call_in_gender
-
-
-
-https://api.gotinder.com/updates?locale=en&include_conversations=true
-
-
-Request URL
-https://api.gotinder.com/v2/profile?locale=en&include=account%2Cavailable_descriptors%2Cboost%2Cbouncerbypass%2Ccontact_cards%2Cemail_settings%2Cfeature_access%2Cinstagram%2Clikes%2Cprofile_meter%2Cnotifications%2Cmisc_merchandising%2Cofferings%2Conboarding%2Cpaywalls%2Cplus_control%2Cpurchase%2Creadreceipts%2Cspotify%2Csuper_likes%2Ctinder_u%2Ctravel%2Ctutorials%2Cuser%2Call_in_gender
+=== app.json size ===
+0 /tmp/app.json
+=== context around known prompt text / ids ===
+app.json not JSON: Expecting value: line 1 column 1 (char 0)
