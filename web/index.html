@@ -331,8 +331,26 @@
     </div>
 
     <div class="card" id="promptCard">
-      <h2>Sharper prompt answers</h2>
-      <div class="stack" id="prompts"></div>
+      <h2>Profile Prompts 🔥</h2>
+      
+      <!-- Current Prompts Section -->
+      <div id="currentPromptsContainer" style="margin-bottom: 24px;">
+        <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 12px; color: #ff7a8c; font-family: 'Space Grotesk', sans-serif;">Active Prompts (<span id="currentPromptsCount">0</span>/3 active)</h3>
+        <div class="stack" id="currentPromptsStack"></div>
+      </div>
+      
+      <!-- AI Suggestions Section -->
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
+          <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin: 0; color: #ff7a8c; font-family: 'Space Grotesk', sans-serif;">AI Suggested Prompts</h3>
+          <button class="btn ghost" id="suggestPromptsBtn" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; margin: 0;">↺ Refresh Suggestions</button>
+        </div>
+        <div id="suggestPromptsLoading" class="hidden" style="padding: 20px 0; text-align: center;">
+          <div class="spin" style="margin: 0 auto 10px;"></div>
+          <span style="font-size: 13px; color: var(--muted);">AI is picking best questions & drafting answers...</span>
+        </div>
+        <div class="stack" id="suggestedPromptsStack"></div>
+      </div>
     </div>
 
     <div class="card">
@@ -494,22 +512,17 @@ function render(data){
       </div>
     </div>`).join('');
 
-  const prompts = r.improved_prompts && r.improved_prompts.length ? r.improved_prompts : null;
-  if(prompts){
-    window.currentPrompts = prompts;
-    const oldByQ = {}; (p.prompts||[]).forEach(x=>oldByQ[x.q]=x.a);
-    $('prompts').innerHTML = prompts.map((pr, i)=>`
-      <div class="item qa">
-        <div class="q">${esc(pr.q)}</div>
-        ${oldByQ[pr.q]?`<div class="old">${esc(oldByQ[pr.q])}</div>`:''}
-        <input type="text" id="prAnswer${i}" style="width:100%; margin-top:8px; margin-bottom:8px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px;" value="${esc(pr.a)}" />
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="copy" data-copy="prAnswer${i}">Copy</button>
-          <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="updateTinderPrompt(${i}, 'prAnswer${i}')">Update to Tinder 🔥</button>
-        </div>
-      </div>`).join('');
-    show($('promptCard'));
-  } else { hide($('promptCard')); }
+  // Render Prompts
+  hide($('currentPromptsContainer'));
+  $('suggestedPromptsStack').innerHTML = '';
+  show($('promptCard'));
+  
+  const token = ($('token').value || $('tokenDesc').value || '').trim();
+  if (token) {
+    fetchAndRenderPromptSuggestions();
+  } else {
+    renderOfflinePromptsFallback(p.prompts || [], r.improved_prompts || []);
+  }
 
   $('photoOrder').textContent = (r.recommended_photo_order||[]).length
     ? 'Recommended order:  ' + r.recommended_photo_order.join('  →  ') : '';
@@ -638,13 +651,70 @@ async function updateTinderBio(elementId){
   btn.textContent = originalText;
 }
 
-async function updateTinderPrompt(index, elementId){
-  if (!window.currentPrompts || !window.currentPrompts[index]) {
-    toast('❌ Prompt data mismatch. Please re-run analysis.');
+async function fetchAndRenderPromptSuggestions() {
+  const token = ($('token').value || $('tokenDesc').value || '').trim();
+  if (!token) return;
+  
+  show($('suggestPromptsLoading'));
+  hide($('suggestedPromptsStack'));
+  
+  try {
+    const res = await fetch('/api/suggest-prompts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, n: 3 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed to fetch suggestions');
+    
+    // Render current prompts
+    renderCurrentPrompts(data.current_prompts || []);
+    
+    // Render suggestions
+    renderSuggestedPrompts(data.suggestions || [], data.catalog || []);
+    
+  } catch (e) {
+    $('suggestedPromptsStack').innerHTML = `<div class="note err" style="color: var(--bad)">Failed to load suggestions: ${esc(e.message)}</div>`;
+    show($('suggestedPromptsStack'));
+  } finally {
+    hide($('suggestPromptsLoading'));
+  }
+}
+
+function renderCurrentPrompts(current) {
+  const container = $('currentPromptsContainer');
+  const countEl = $('currentPromptsCount');
+  const stack = $('currentPromptsStack');
+  
+  show(container);
+  countEl.textContent = current.length;
+  
+  if (current.length === 0) {
+    stack.innerHTML = `<div class="note">No active prompts on your profile. Set one below or on the Tinder app!</div>`;
     return;
   }
-  const questionText = window.currentPrompts[index].q;
-  const el = $(elementId);
+  
+  stack.innerHTML = current.map((p, i) => {
+    const qText = p.q || p.question_text || '';
+    const aText = p.a || p.answer_text || '';
+    const pId = p.id || '';
+    const qId = p.question_id || '';
+    
+    return `
+      <div class="item qa">
+        <div class="q">${esc(qText)}</div>
+        <textarea id="curPrAnswer${i}" style="width:100%; margin-top:8px; margin-bottom:8px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical;">${esc(aText)}</textarea>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="copy" data-copy="curPrAnswer${i}">Copy</button>
+          <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="updateActivePrompt('${esc(pId)}', '${esc(qId)}', '${esc(qText)}', ${i})">Update on Tinder 🔥</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function updateActivePrompt(pId, qId, qText, index) {
+  const el = $(`curPrAnswer${index}`);
   const answerText = el.value.trim();
   const token = ($('token').value || $('tokenDesc').value || '').trim();
   if(!token){
@@ -660,16 +730,140 @@ async function updateTinderPrompt(index, elementId){
     const res = await fetch('/api/update-prompt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token, question_text: questionText, answer_text: answerText })
+      body: JSON.stringify({ token: token, question_text: qText, answer_text: answerText })
     });
     const d = await res.json();
     if(!res.ok) throw new Error(d.detail || 'Failed to update');
     toast('🎉 Tinder Prompt Updated Successfully! 🔥');
+    await fetchAndRenderPromptSuggestions();
   }catch(e){
     toast('❌ ' + e.message);
   }
   btn.disabled = false;
   btn.textContent = originalText;
+}
+
+function renderSuggestedPrompts(suggestions, catalog) {
+  const stack = $('suggestedPromptsStack');
+  show(stack);
+  
+  if (suggestions.length === 0) {
+    stack.innerHTML = `<div class="note">No suggestions generated by AI.</div>`;
+    return;
+  }
+  
+  stack.innerHTML = suggestions.map((s, i) => {
+    const selectOptions = catalog.map(c => {
+      const selected = c.question_id === s.question_id ? 'selected' : '';
+      return `<option value="${esc(c.question_id)}" ${selected}>${esc(c.question_text)}</option>`;
+    }).join('');
+    
+    return `
+      <div class="item" style="margin-bottom: 16px;">
+        <div style="margin-bottom: 8px;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 4px;">Choose Question</label>
+          <select id="sugPrSelect${i}" style="width: 100%; min-width: 100%; padding: 8px 10px; border-radius: 8px; font-size: 14px;">
+            ${selectOptions}
+          </select>
+        </div>
+        <div style="margin-bottom: 8px;">
+          <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 4px;">AI Draft Answer</label>
+          <textarea id="sugPrAnswer${i}" style="width:100%; min-height:60px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical; outline:none; margin-bottom:4px;">${esc(s.answer)}</textarea>
+        </div>
+        <div class="why" style="margin-bottom: 12px;">${esc(s.rationale)}</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="copy" data-copy="sugPrAnswer${i}">Copy</button>
+          <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="publishSuggestedPrompt(${i})">Publish to Tinder 🔥</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function publishSuggestedPrompt(index) {
+  const selectEl = $(`sugPrSelect${index}`);
+  const answerEl = $(`sugPrAnswer${index}`);
+  
+  const questionId = selectEl.value;
+  const answerText = answerEl.value.trim();
+  const token = ($('token').value || $('tokenDesc').value || '').trim();
+  
+  if(!token){
+    toast('❌ Paste your Tinder X-Auth-Token first!');
+    $('inputCard').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  if(!answerText){
+    toast('❌ Prompt answer cannot be empty!');
+    return;
+  }
+  
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Publishing… 🚀';
+  
+  try{
+    const res = await fetch('/api/create-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, question_id: questionId, answer_text: answerText })
+    });
+    const d = await res.json();
+    if(!res.ok) throw new Error(d.detail || 'Failed to publish');
+    toast('🎉 Prompt Published to Tinder! 🔥');
+    await fetchAndRenderPromptSuggestions();
+  }catch(e){
+    toast('❌ ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = originalText;
+}
+
+function renderOfflinePromptsFallback(current, improved) {
+  const container = $('currentPromptsContainer');
+  const countEl = $('currentPromptsCount');
+  const stack = $('currentPromptsStack');
+  
+  show(container);
+  countEl.textContent = current.length || '0';
+  
+  if (current.length > 0) {
+    stack.innerHTML = current.map((p, i) => `
+      <div class="item qa">
+        <div class="q">${esc(p.q || p.question_text)}</div>
+        <textarea id="offCurPrAnswer${i}" style="width:100%; min-height:40px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical; outline:none;" readonly>${esc(p.a || p.answer_text)}</textarea>
+      </div>
+    `).join('');
+  } else {
+    stack.innerHTML = `<div class="note">No active prompts on profile. (Provide a Tinder token in Step 2 to edit/update live)</div>`;
+  }
+  
+  const suggestedStack = $('suggestedPromptsStack');
+  show(suggestedStack);
+  hide($('suggestPromptsLoading'));
+  
+  if (improved.length === 0) {
+    suggestedStack.innerHTML = `<div class="note">No suggestions generated. (Provide a Tinder token in Step 2 to generate tailored prompt suggestions)</div>`;
+    return;
+  }
+  
+  suggestedStack.innerHTML = improved.map((pr, i) => {
+    const oldByQ = {}; current.forEach(x=>oldByQ[x.q || x.question_text]=x.a || x.answer_text);
+    const oldAnswer = oldByQ[pr.q];
+    
+    return `
+      <div class="item qa">
+        <div class="q">${esc(pr.q)}</div>
+        ${oldAnswer ? `<div class="old">${esc(oldAnswer)}</div>` : ''}
+        <textarea id="offPrAnswer${i}" style="width:100%; min-height:60px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical; outline:none; margin-top:8px;" readonly>${esc(pr.a)}</textarea>
+        <div style="margin-top:8px;">
+          <button class="copy" data-copy="offPrAnswer${i}">Copy</button>
+          <span style="font-size: 12px; color: var(--muted); margin-left: 12px;">(Tinder token required to publish live)</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 async function generateFromDesc() {
@@ -747,6 +941,14 @@ $('downloadBtn').onclick = ()=>{
 };
 $('brainBackendSelect').onchange = saveBackends;
 $('visionBackendSelect').onchange = saveBackends;
+$('suggestPromptsBtn').onclick = () => {
+  const tok = ($('token').value || $('tokenDesc').value || '').trim();
+  if (tok) {
+    fetchAndRenderPromptSuggestions();
+  } else {
+    toast('❌ Paste your Tinder X-Auth-Token first!');
+  }
+};
 health();
 </script>
 </body>

@@ -10,6 +10,17 @@ Format:
 - next: <what the other side should pick up>
 - blocked/notes: <anything needing a human or a decision>
 
+## 2026-06-03 — Antigravity (laptop)
+- did:
+  - Wired the new "Profile Prompts" card in `web/index.html` to integrate the AI suggestions and enable publishing/updating prompts live on Tinder.
+  - Implemented automatic suggestion fetching when a token is provided in step 2.
+  - Implemented dynamic question swap using the selector populated from the live tinder prompt catalog.
+  - Designed elegant offline/fallback state rendering for sample profiles or when running without a token.
+  - Registered all buttons and handlers (Publish, Copy, Update, Refresh).
+- next:
+  - Ready for user review or further instructions.
+- blocked/notes: None. Offline test suite passes with 26/26.
+
 ## 2026-06-03 (AI prompts) — desktop / Claude Code
 - did: Built the **AI prompt-suggestion engine** on top of Antigravity's verified endpoints.
   • `coach.suggest_prompts(profile, catalog, n=3)` → `PromptSuggestionSet` — AI picks the best-fit
