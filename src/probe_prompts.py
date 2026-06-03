@@ -49,6 +49,8 @@ def write_test(conn, target_id, answer):
         full.append({"id": target_id, "answer_text": answer})
 
     candidates = [
+        # WORKING endpoint & payload discovered!
+        ("POST", "https://api.gotinder.com/v2/profile/user?locale=en", {"selected_prompts": [{"id": target_id, "answer_text": answer}]}),
         # NEW top hypothesis: writes nested under "user" (how descriptor writes are shaped)
         ("POST", "https://api.gotinder.com/v2/profile", {"user": {"user_prompts": {"prompts": full}}}),
         ("POST", "https://api.gotinder.com/profile",    {"user": {"user_prompts": {"prompts": full}}}),

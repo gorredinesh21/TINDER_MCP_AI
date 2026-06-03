@@ -228,6 +228,8 @@ class TinderConnector:
         """
         import requests as _req
         candidates = [
+            # Tinder's selectable questions catalog
+            "https://api.gotinder.com/v2/dynamicui/configuration/content?locale=en&component_id=prompts_text_editor_v2",
             # Tinder's static published config bundle — most likely home of the prompt catalog.
             "https://data.gotinder.com/v3/publish/app/json",
             "https://api.gotinder.com/v2/profile?include=available_prompts",
@@ -275,15 +277,20 @@ class TinderConnector:
         return uniq
 
     def set_prompts(self, prompts: list[dict], confirm: bool = False) -> dict:
-        """Write the FULL prompt list to your own profile (Tinder replaces the whole set, so we
-        always send every prompt — never just one — to avoid wiping the others).
+        """Write the prompt list to your own profile using the selected_prompts array.
         Each item: {"question_id":.., "answer_text":.., optional "id" for an existing one}."""
         if not confirm:
             raise RuntimeError("set_prompts refused: pass confirm=True to change your live prompts.")
         import requests as _req
-        clean = [{k: p[k] for k in ("id", "question_id", "answer_text") if p.get(k)} for p in prompts]
-        r = _req.post("https://api.gotinder.com/v2/profile",
-                      headers=self._api_headers(), json={"user_prompts": {"prompts": clean}}, timeout=15)
+        clean = []
+        for p in prompts:
+            qid = p.get("id") or p.get("question_id")
+            ans = p.get("answer_text")
+            if qid and ans is not None:
+                clean.append({"id": qid, "answer_text": ans})
+        
+        r = _req.post("https://api.gotinder.com/v2/profile/user?locale=en",
+                      headers=self._api_headers(), json={"selected_prompts": clean}, timeout=15)
         r.raise_for_status()
         return r.json()
 

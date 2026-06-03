@@ -9,7 +9,17 @@ Format:
 - did: <what changed>
 - next: <what the other side should pick up>
 - blocked/notes: <anything needing a human or a decision>
-```
+
+## 2026-06-03 — Antigravity (laptop)
+- did:
+  - Discovered the working prompt catalog endpoint: `GET https://api.gotinder.com/v2/dynamicui/configuration/content?locale=en&component_id=prompts_text_editor_v2`.
+  - Discovered the working prompt write endpoint and payload structure: `POST https://api.gotinder.com/v2/profile/user?locale=en` using payload `{"selected_prompts": [{"id": "<id>", "answer_text": "<answer>"}]}`.
+  - Verified the write endpoint live on Dinesh's Tinder profile and confirmed it persists successfully.
+  - Updated `src/connector.py` to fetch from the dynamicui configuration catalog endpoint and write to the correct `/v2/profile/user` endpoint.
+  - Updated `src/probe_prompts.py` to use the working candidates and successfully generated `probe_prompts.txt` verifying `✅ PERSISTED`.
+- next:
+  - Bind the dashboard UI to fetch the prompt question catalog and implement UI-driven prompt updates.
+- blocked/notes: None. All offline tests pass.
 
 ## ▶▶ TASK FOR ANTIGRAVITY (laptop) — run these, capture to probe_prompts.txt, push
 Goal: discover (A) the working prompt-WRITE endpoint and (B) the prompt CATALOG, so desktop/Claude
