@@ -11,6 +11,26 @@ Format:
 - blocked/notes: <anything needing a human or a decision>
 ```
 
+## 2026-06-03 (prompts pt.3) — desktop / Claude Code
+- learned (from write-test + captured URLs): `POST /v2/profile` does NOT persist prompts (all 4 shapes
+  200-but-no-change). Real app's include list has `available_descriptors` but NO `available_prompts`,
+  so prompts ≠ descriptors. New lead: app loads `https://data.gotinder.com/v3/publish/app/json`
+  (static config bundle — likely the prompt CATALOG).
+- did (new hypotheses to test):
+  • probe now dumps the FULL raw `user_prompts` (all fields — we may be dropping a `position`/instance id
+    the write needs).
+  • write-test now tries the **`{"user":{"user_prompts":{"prompts":[…]}}}`** shape (writes nested under
+    `user`, like descriptor writes) on /v2/profile, /profile, and ?locale=en.
+  • `fetch_available_prompts` now probes `data.gotinder.com/v3/publish/app/json` for the catalog.
+  Tests 24/24.
+- next (LAPTOP — re-run, paste output):
+  `python src/probe_prompts.py <token> --write-test pro_4 "TESTXYZ"`
+  Look for: (1) the RAW user_prompts dump (any `position`/extra id?), (2) does any write candidate say
+  "✅ PERSISTED" (esp. the `user`-wrapped ones), (3) does the `publish/app/json` probe return prompt
+  questions in the parsed catalog.
+  If still nothing persists: prompts are likely **mobile-app-only writes** → we'd need a mitmproxy
+  capture of the phone editing a prompt (same method used for the original reads) to get the endpoint.
+
 ## 2026-06-03 (prompts pt.2) — desktop / Claude Code
 - learned from the live probe (`probe_prompts.txt`, thanks): profile HAS 2 prompts; the field is
   **`id`** (e.g. `pro_4`, `pro_14`) and there is **NO `question_id`**. Catalog endpoints all came back

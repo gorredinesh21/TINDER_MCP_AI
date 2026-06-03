@@ -228,11 +228,12 @@ class TinderConnector:
         """
         import requests as _req
         candidates = [
-            "https://api.gotinder.com/v2/profile/prompts",
+            # Tinder's static published config bundle — most likely home of the prompt catalog.
+            "https://data.gotinder.com/v3/publish/app/json",
             "https://api.gotinder.com/v2/profile?include=available_prompts",
-            "https://api.gotinder.com/v2/profile?include=prompts",
+            "https://api.gotinder.com/v2/profile?locale=en&include=available_descriptors",
+            "https://api.gotinder.com/v2/profile/prompts",
             "https://api.gotinder.com/v2/prompts",
-            "https://api.gotinder.com/v2/profile/promptlist",
             "https://api.gotinder.com/v2/dynamic-ui/configuration?include=prompts",
         ]
         results: dict = {}

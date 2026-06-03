@@ -49,10 +49,13 @@ def write_test(conn, target_id, answer):
         full.append({"id": target_id, "answer_text": answer})
 
     candidates = [
+        # NEW top hypothesis: writes nested under "user" (how descriptor writes are shaped)
+        ("POST", "https://api.gotinder.com/v2/profile", {"user": {"user_prompts": {"prompts": full}}}),
+        ("POST", "https://api.gotinder.com/profile",    {"user": {"user_prompts": {"prompts": full}}}),
+        ("POST", "https://api.gotinder.com/v2/profile?locale=en", {"user": {"user_prompts": {"prompts": full}}}),
+        # already-tried shapes (kept for completeness)
         ("POST", "https://api.gotinder.com/v2/profile", {"user_prompts": {"prompts": full}}),
-        ("POST", "https://api.gotinder.com/profile",    {"user_prompts": {"prompts": full}}),
         ("POST", "https://api.gotinder.com/v2/profile", {"prompts": full}),
-        ("PUT",  "https://api.gotinder.com/v2/profile/user_prompts", {"prompts": full}),
     ]
     print(f"\n=== WRITE TEST on {target_id} (target answer: {answer!r}) ===")
     for method, url, body in candidates:
@@ -80,6 +83,15 @@ def main() -> None:
         cur = conn._raw_user_prompts()
         print(dump(cur))
         print(f"({len(cur)} prompt(s) currently on your profile)")
+    except Exception as e:
+        print("error:", e)
+
+    print("\n=== RAW user_prompts (ALL fields — looking for position / instance id we may be dropping) ===")
+    try:
+        import requests
+        r = requests.get("https://api.gotinder.com/v2/profile?locale=en&include=user",
+                         headers=conn._api_headers(), timeout=15)
+        print(dump(r.json().get("data", {}).get("user", {}).get("user_prompts", {}), 2000))
     except Exception as e:
         print("error:", e)
 
