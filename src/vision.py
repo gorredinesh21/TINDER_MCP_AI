@@ -38,7 +38,6 @@ class TinderVision:
         # Step 2: Base64 encode
         base64_str = base64.b64encode(image_bytes).decode("utf-8")
 
-        # Step 3: Call local Ollama vision model
         prompt = (
             "Describe this dating profile photo in rich detail. "
             "Identify and describe the background setting, environment, and setting location. "
@@ -50,6 +49,55 @@ class TinderVision:
             "Be extremely objective, thorough, descriptive, and provide a detailed multi-paragraph description."
         )
 
+        # Step 3: Check vision backend preference (defaults to gemini if key is present, else ollama)
+        vision_backend = os.getenv("VISION_BACKEND", "gemini" if os.getenv("GEMINI_API_KEY") else "ollama").lower()
+        if vision_backend == "gemini":
+            gemini_key = os.getenv("GEMINI_API_KEY")
+            if gemini_key:
+                # Determine mime type from photo.url or path (default to image/jpeg)
+                mime_type = "image/jpeg"
+                test_target = (photo.url or photo.path or "").lower()
+                if ".png" in test_target:
+                    mime_type = "image/png"
+                elif ".webp" in test_target:
+                    mime_type = "image/webp"
+
+                print(f"[vision] Calling Google Gemini API (gemini-2.5-flash) for photo {photo.id}")
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+                    payload = {
+                        "contents": [
+                            {
+                                "parts": [
+                                    {
+                                        "inline_data": {
+                                            "mime_type": mime_type,
+                                            "data": base64_str
+                                        }
+                                    },
+                                    {
+                                        "text": prompt
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    resp = requests.post(url, json=payload, timeout=30)
+                    if resp.status_code == 200:
+                        result = resp.json()
+                        candidates = result.get("candidates", [])
+                        if candidates:
+                            text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                            if text:
+                                return text.strip()
+                        print(f"[vision] Gemini returned empty/unexpected candidates payload: {result}")
+                    else:
+                        print(f"[vision] Gemini API returned status {resp.status_code}: {resp.text}")
+                except Exception as e:
+                    print(f"[vision] Exception calling Gemini: {e}")
+                print("[vision] Gemini failed or returned invalid response. Falling back to local Ollama...")
+
+        # Step 4: Call local Ollama vision model (fallback)
         try:
             resp = requests.post(
                 f"{self.ollama_url}/api/generate",

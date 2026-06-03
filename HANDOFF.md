@@ -11,6 +11,23 @@ Format:
 - blocked/notes: <anything needing a human or a decision>
 ```
 
+## 2026-06-03 — office laptop / Antigravity
+- did: Integrated Google Gemini for fast vision photo analysis, enabled direct prompt updates on Tinder, introduced toggleable engine selectors, and added description-based profile generation:
+  * **Gemini Vision**: Integrated `gemini-2.5-flash` API for photo analysis in `src/vision.py`. The app will automatically use Gemini if `GEMINI_API_KEY` is configured in `.env`, falling back to local Ollama vision if needed.
+  * **Web Configuration**: Added Gemini API Key input field and save handler in Step 1 of the web dashboard.
+  * **Editable Suggestions**: Converted recommended bios/prompts into interactive, editable fields (`textarea` and `input`), giving users full control to modify suggestions before pushing them live.
+  * **Tinder Prompt Updates**: Implemented `/api/update-prompt` POST endpoint in `app.py` and `TinderConnector.update_my_prompt` in `src/connector.py` to write prompt updates back to Tinder.
+  * **Toggleable Backends**: Built a pluggable Gemini text brain backend (`GeminiLLM`) in `src/llm.py`. Added drop-down selectors in Step 1 of the dashboard to let users choose their preferred LLM (Hugging Face / Gemini / Ollama) and VLM (Gemini / Ollama) engines, saving automatically to `.env` on change.
+  * **Prompt Update Fixes & Fallbacks**: Switched the front-end to use index-based referencing to eliminate Javascript quote/backtick escaping errors. Added unescaping and alphanumeric normalization inside FastAPI matching logic. Added multi-strategy fallbacks (strict normalized, substring match, key words intersection, single-prompt match) to match prompts dynamically and support a clear error message if there are no prompts active.
+  * **Habits & Descriptors Guide**: Rendered a new card displaying optimized recommendations for Smoking, Drinking, Height, Exercise, and Intent tags.
+  * **Generate from Description Mode**: Added tab toggles to Step 2. Fixed an inline CSS bug preventing visibility of the description text area. Users can now input a raw description of themselves and generate a complete Tinder profile (bios and prompts) from scratch, including options for live publishing.
+  * **Dynamic Reloading**: Refactored `get_coach()` to compare the active in-memory LLM name with the selected environment variable dynamically and reload `DatingCoach` instantly on change, solving worker caching issues.
+  * **Tests**: Verified everything with offline test suite updates (23/23 tests passing).
+- next: Try running the dashboard, select your preferences, try generating a profile from a custom self-description, and check the habits guide card.
+- blocked/notes: None. All checks are fully green.
+
+---
+
 ## 2026-06-02 (web features) — office laptop / Antigravity
 - did: Implemented and fully integrated a premium **"Update to Tinder" direct bio writer** directly on the web dashboard UI!
   * **New Endpoint:** Added `/api/update-bio` POST route in `app.py` that securely instantiates the `TinderConnector` using the in-memory token and writes the chosen bio variant directly to the live Tinder servers via `update_my_bio()`.

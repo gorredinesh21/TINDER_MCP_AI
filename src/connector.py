@@ -104,7 +104,12 @@ class TinderConnector:
                 
                 # Fetch prompts
                 for p in user_data.get("user_prompts", {}).get("prompts", []):
-                    prompts_list.append({"q": p.get("question_text", ""), "a": p.get("answer_text", "")})
+                    prompts_list.append({
+                        "q": p.get("question_text", ""),
+                        "a": p.get("answer_text", ""),
+                        "id": p.get("id", ""),
+                        "question_id": p.get("question_id", "")
+                    })
                 
                 # Fetch descriptors (zodiac, smoker, drinking, height, languages, etc.)
                 for d in user_data.get("selected_descriptors", []):
@@ -187,6 +192,40 @@ class TinderConnector:
             "https://api.gotinder.com/profile",
             headers=headers,
             json={"bio": new_bio},
+        )
+        res.raise_for_status()
+        return res.json()
+
+    def update_my_prompt(self, prompt_id: str, question_id: str, new_answer: str, confirm: bool = False) -> dict:
+        """Push an updated prompt answer to YOUR OWN profile. MANUAL-CONFIRM only.
+
+        Uses the same mobile User-Agent to POST to v2/profile.
+        """
+        if not confirm:
+            raise RuntimeError(
+                "update_my_prompt refused: pass confirm=True to actually change your live prompt."
+            )
+        import requests as _req
+        headers = {
+            "X-Auth-Token": self._token,
+            "User-Agent": "Tinder/14.21.0 (iPhone; iOS 16.6.1; Scale/3.00)",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "user_prompts": {
+                "prompts": [
+                    {
+                        "id": prompt_id,
+                        "question_id": question_id,
+                        "answer_text": new_answer
+                    }
+                ]
+            }
+        }
+        res = _req.post(
+            "https://api.gotinder.com/v2/profile",
+            headers=headers,
+            json=payload,
         )
         res.raise_for_status()
         return res.json()

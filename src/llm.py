@@ -11,13 +11,66 @@ Both resolve to a LangChain *chat* model, so coach.py is fully backend-agnostic:
 from __future__ import annotations
 
 import os
+import requests
 from dataclasses import dataclass
 from typing import Any
 
 
+class GeminiLLM:
+    def __init__(self, api_key: str, model: str, temperature: float, max_tokens: int):
+        self.api_key = api_key
+        self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+
+    def invoke(self, messages: list) -> Any:
+        system_messages = [m.content for m in messages if m.__class__.__name__ == "SystemMessage"]
+        other_messages = [m for m in messages if m.__class__.__name__ != "SystemMessage"]
+        
+        system_instruction_payload = {}
+        if system_messages:
+            system_instruction_payload = {
+                "system_instruction": {
+                    "parts": [{"text": "\n".join(system_messages)}]
+                }
+            }
+            
+        contents_payload = []
+        for msg in other_messages:
+            role = "model" if msg.__class__.__name__ == "AIMessage" else "user"
+            contents_payload.append({
+                "role": role,
+                "parts": [{"text": msg.content}]
+            })
+            
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        payload = {
+            "contents": contents_payload,
+            "generationConfig": {
+                "temperature": self.temperature,
+                "maxOutputTokens": self.max_tokens,
+            }
+        }
+        if system_instruction_payload:
+            payload.update(system_instruction_payload)
+            
+        res = requests.post(url, json=payload, timeout=60)
+        res.raise_for_status()
+        data = res.json()
+        
+        candidates = data.get("candidates", [])
+        if candidates:
+            text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            class MockResponse:
+                def __init__(self, content):
+                    self.content = content
+            return MockResponse(text)
+        raise RuntimeError(f"Gemini returned no candidates: {data}")
+
+
 @dataclass
 class LLM:
-    _impl: Any           # a LangChain chat model (ChatHuggingFace or ChatOllama)
+    _impl: Any           # a LangChain chat model or GeminiLLM
     name: str            # human-readable, e.g. "hf:Qwen/Qwen2.5-7B-Instruct"
 
     def generate(self, system: str, user: str) -> str:
@@ -36,7 +89,7 @@ def make_llm() -> LLM:
         token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
         if not token:
             raise RuntimeError("LLM_BACKEND=hf but HUGGINGFACEHUB_API_TOKEN is not set")
-        model = os.getenv("HF_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+        model = os.getenv("HF_MODEL", "Qwen/Qwen2.5-72B-Instruct")
         # task="conversational" -> HF Inference Providers chat-completions API
         # (instruct/chat models are no longer served as plain text-generation).
         endpoint = HuggingFaceEndpoint(
@@ -54,4 +107,12 @@ def make_llm() -> LLM:
         impl = ChatOllama(model=model, temperature=temperature, num_predict=max_tokens)
         return LLM(_impl=impl, name=f"ollama:{model}")
 
-    raise ValueError(f"Unknown LLM_BACKEND={backend!r}. Use 'hf' or 'ollama'.")
+    if backend == "gemini":
+        token = os.environ.get("GEMINI_API_KEY")
+        if not token:
+            raise RuntimeError("LLM_BACKEND=gemini but GEMINI_API_KEY is not set")
+        model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        impl = GeminiLLM(api_key=token, model=model, temperature=temperature, max_tokens=max_tokens)
+        return LLM(_impl=impl, name=f"gemini:{model}")
+
+    raise ValueError(f"Unknown LLM_BACKEND={backend!r}. Use 'hf', 'gemini', or 'ollama'.")

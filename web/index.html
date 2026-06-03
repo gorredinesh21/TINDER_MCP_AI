@@ -170,40 +170,105 @@
 
   <!-- ① CONNECT -->
   <div class="card" id="connectCard">
-    <h2><span class="step">1</span>Connect your AI engine</h2>
-    <p class="sub">The text brain (bio + prompts) runs on <b>Hugging&nbsp;Face</b> — bigger, smarter models than a
-      laptop can run. Paste a free key once and we save it to your local <code>.env</code>. Get one at
-      <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">huggingface.co/settings/tokens</a>.</p>
-    <div class="row">
-      <input type="password" id="hfKey" placeholder="hf_…  your Hugging Face API key" autocomplete="off" spellcheck="false" />
-      <button class="btn" id="saveKeyBtn">Save key</button>
+    <h2><span class="step">1</span>Connect your AI engines</h2>
+    <p class="sub">Set up your API keys to power the coach. Keys are saved securely to your local <code>.env</code> file.</p>
+    
+    <!-- HF Engine -->
+    <div style="margin-bottom: 20px;">
+      <p class="sub" style="margin-bottom: 8px;"><b>Text Brain (Hugging Face)</b> — powers bio and prompt suggestions:
+        <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener" style="color:#ff7a8c">Get token</a>
+      </p>
+      <div class="row">
+        <input type="password" id="hfKey" placeholder="hf_…  your Hugging Face API key" autocomplete="off" spellcheck="false" />
+        <button class="btn" id="saveKeyBtn">Save key</button>
+      </div>
+      <div class="status" id="hfStatus"><span class="led"></span><span>Checking…</span></div>
     </div>
-    <div class="status" id="hfStatus"><span class="led"></span><span>Checking…</span></div>
+
+    <!-- Gemini Engine -->
+    <div>
+      <p class="sub" style="margin-bottom: 8px;"><b>Fast Photo Vision (Google Gemini)</b> — bypasses slow local model download:
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:#ff7a8c">Get API key</a>
+      </p>
+      <div class="row">
+        <input type="password" id="geminiKey" placeholder="AIzaSy…  your Google Gemini API key" autocomplete="off" spellcheck="false" />
+        <button class="btn" id="saveGeminiKeyBtn">Save key</button>
+      </div>
+      <div class="status" id="geminiStatus"><span class="led"></span><span>Checking Gemini key…</span></div>
+    </div>
+
+    <!-- Active Engine Preferences -->
+    <div style="margin-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px;">
+      <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 15px; color: #ff7a8c; font-family: 'Space Grotesk', sans-serif;">Active Engine Preferences</h3>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+        <!-- LLM Backend Selector -->
+        <div>
+          <p class="sub" style="margin-bottom: 8px; font-size: 13.5px;"><b>Text Brain Backend (LLM)</b></p>
+          <select id="brainBackendSelect" style="width: 100%; box-sizing: border-box;">
+            <option value="hf">Hugging Face (Cloud)</option>
+            <option value="gemini">Google Gemini (Cloud)</option>
+            <option value="ollama">Ollama (Local)</option>
+          </select>
+        </div>
+        
+        <!-- VLM Backend Selector -->
+        <div>
+          <p class="sub" style="margin-bottom: 8px; font-size: 13.5px;"><b>Photo Vision Backend (VLM)</b></p>
+          <select id="visionBackendSelect" style="width: 100%; box-sizing: border-box;">
+            <option value="gemini">Google Gemini (Cloud)</option>
+            <option value="ollama">Ollama (Local)</option>
+          </select>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ② ANALYZE -->
   <div class="card" id="inputCard">
-    <h2><span class="step">2</span>Analyze your profile</h2>
-    <p class="sub">Paste your Tinder <b>X-Auth-Token</b> (it changes each session). Used once to read your
-      profile — <b>never stored or logged</b>.</p>
-    <div class="row">
-      <input type="password" id="token" placeholder="Paste your Tinder X-Auth-Token…" autocomplete="off" spellcheck="false" />
-      <button class="btn" id="goBtn">Analyze ✨</button>
+    <h2><span class="step">2</span>Dating Coach Engine</h2>
+    <p class="sub">Choose whether to analyze/improve your existing live Tinder profile or generate a completely new profile from scratch based on a description of yourself.</p>
+
+    <!-- Tab selectors -->
+    <div style="display:flex; border-bottom: 2px solid var(--line); margin-bottom: 20px;">
+      <button id="tabLive" class="tab-btn active" style="flex:1; background:none; border:none; border-bottom: 2px solid var(--accent); padding:12px; color:var(--accent); font-size:15px; font-weight:700; cursor:pointer; text-align:center; transition: all .25s; opacity: 1;">Improve Live Profile</button>
+      <button id="tabDesc" class="tab-btn" style="flex:1; background:none; border:none; padding:12px; color:var(--ink); font-size:15px; font-weight:700; cursor:pointer; text-align:center; transition: all .25s; opacity:0.6;">Generate from Description</button>
     </div>
-    <div class="row" style="margin-top:11px">
-      <button class="btn ghost" id="sampleBtn">▶ Try with sample data</button>
+
+    <!-- Mode 1: Live Profile Container -->
+    <div id="modeLiveContainer">
+      <p class="sub">Paste your Tinder <b>X-Auth-Token</b> (it changes each session). Used once to read your
+        profile — <b>never stored or logged</b>.</p>
+      <div class="row">
+        <input type="password" id="token" placeholder="Paste your Tinder X-Auth-Token…" autocomplete="off" spellcheck="false" />
+        <button class="btn" id="goBtn">Analyze ✨</button>
+      </div>
+      <div class="row" style="margin-top:11px">
+        <button class="btn ghost" id="sampleBtn">▶ Try with sample data</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="useVision" />
+        <span>Also analyze my photos with local vision <span id="visionHint"></span></span></label>
+      <details style="margin-top:15px">
+        <summary>How do I get my X-Auth-Token?</summary>
+        <ol>
+          <li>Open <b>tinder.com</b> in your browser and log in.</li>
+          <li>Press <b>F12</b> → <b>Network</b> tab → filter for <code>api.gotinder.com</code>.</li>
+          <li>Click any request → <b>Headers</b> → copy the value of <code>X-Auth-Token</code>.</li>
+          <li>Paste it above. (Grab a fresh one if it expires.)</li>
+        </ol>
+      </details>
     </div>
-    <label class="toggle"><input type="checkbox" id="useVision" />
-      <span>Also analyze my photos with local vision <span id="visionHint"></span></span></label>
-    <details>
-      <summary>How do I get my X-Auth-Token?</summary>
-      <ol>
-        <li>Open <b>tinder.com</b> in your browser and log in.</li>
-        <li>Press <b>F12</b> → <b>Network</b> tab → filter for <code>api.gotinder.com</code>.</li>
-        <li>Click any request → <b>Headers</b> → copy the value of <code>X-Auth-Token</code>.</li>
-        <li>Paste it above. (Grab a fresh one if it expires.)</li>
-      </ol>
-    </details>
+
+    <!-- Mode 2: Description Container -->
+    <div id="modeDescContainer" class="hidden">
+      <p class="sub">Explain your daily life, job, personality, workout/lifestyle habits, relationship intent, and other details. The coach will generate bio options, prompt answers, and guidelines from scratch.</p>
+      <textarea id="selfDescription" style="width:100%; min-height:120px; background:rgba(0,0,0,0.25); border:1px solid var(--line); color:var(--ink); border-radius:12px; padding:12px; font-size:15px; font-family:inherit; resize:vertical; margin-bottom:12px; outline:none; transition: border-color .25s;" placeholder="Tell the AI about yourself (e.g. 'I work as a designer in Mumbai. I am 25, love playing tennis, eating filter coffee, and trekking. I am looking for something serious, drink socially, and do not smoke...')"></textarea>
+      
+      <p class="sub" style="margin-bottom:8px;"><b>Optional: Tinder X-Auth-Token</b> (allows directly updating the generated bios & prompts live to your account)</p>
+      <input type="password" id="tokenDesc" placeholder="Paste Tinder Token (optional)..." autocomplete="off" spellcheck="false" style="width:100%; margin-bottom:15px; box-sizing:border-box;" />
+
+      <button class="btn" id="generateBtn" style="width:100%;">Generate Profile ✨</button>
+    </div>
   </div>
 
   <!-- ③ LOCAL VISION SETUP -->
@@ -253,7 +318,7 @@
 
     <div class="card hl">
       <h2>🔥 Recommended new bio</h2>
-      <div class="biotext" id="bioBest"></div>
+      <textarea id="bioBest" style="width:100%; min-height:100px; background:rgba(0,0,0,0.25); border:1px solid var(--line); color:var(--ink); border-radius:12px; padding:12px; font-size:16px; font-family:inherit; resize:vertical; margin-bottom:12px; outline:none; transition: border-color .25s;" class="biotext"></textarea>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button class="copy" data-copy="bioBest">Copy bio</button>
         <button class="btn" style="padding:10px 18px; font-size:14px;" onclick="updateTinderBio('bioBest')">Update to Tinder 🔥</button>
@@ -279,6 +344,12 @@
     <div class="card">
       <h2>What's missing</h2>
       <div class="chips" id="gaps"></div>
+    </div>
+
+    <div class="card" id="habitsCard">
+      <h2>Habits & Details Optimization Guide</h2>
+      <p class="sub">Dating-science recommendations for your personal details and tags.</p>
+      <div class="stack" id="habitsGuide"></div>
     </div>
 
     <div class="row">
@@ -317,9 +388,24 @@ async function health(){
     setText(st, connected ? `Connected — ${h.model}`
       : (h.backend==='hf' ? 'No HF key yet — paste it above to connect.'
                           : `Running local (${h.model}). Add an HF key for bigger, smarter models.`));
+    
+    // Gemini Status
+    const gst = $('geminiStatus'), geminiConnected = h.gemini_present;
+    gst.classList.toggle('on', geminiConnected);
+    setText(gst, geminiConnected ? 'Google Gemini vision key active ✓'
+                                 : 'No Gemini key — will default to local Ollama vision if checked.');
+
     const vh = $('visionHint');
-    vh.textContent = h.vision_ready ? '(ready ✓)' : '(needs step 3)';
-    vh.style.color = h.vision_ready ? 'var(--good)' : '#ff8c9a';
+    if (h.vision_backend === 'gemini' && h.gemini_present) {
+      vh.textContent = '(Gemini cloud active ✓)';
+      vh.style.color = 'var(--good)';
+    } else {
+      vh.textContent = h.vision_ready ? '(local VLLM active ✓)' : '(needs local setup)';
+      vh.style.color = h.vision_ready ? 'var(--good)' : '#ff8c9a';
+    }
+
+    if (h.backend) $('brainBackendSelect').value = h.backend;
+    if (h.vision_backend) $('visionBackendSelect').value = h.vision_backend;
   }catch{ $('backendBadge').textContent = 'backend: unknown'; }
 }
 async function saveKey(){
@@ -332,6 +418,35 @@ async function saveKey(){
     $('hfKey').value = ''; toast('Key saved 🔑'); await health();
   }catch(e){ const st=$('hfStatus'); st.classList.remove('on'); setText(st, '✗ '+e.message); }
   btn.disabled = false; btn.textContent = 'Save key';
+}
+async function saveGeminiKey(){
+  const key = $('geminiKey').value.trim(), btn = $('saveGeminiKeyBtn');
+  if(!key){ toast('Paste your Gemini key first'); return; }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try{
+    const res = await fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({gemini_token:key})});
+    const d = await res.json(); if(!res.ok) throw new Error(d.detail || 'failed');
+    $('geminiKey').value = ''; toast('Gemini key saved 🔑'); await health();
+  }catch(e){ const st=$('geminiStatus'); st.classList.remove('on'); setText(st, '✗ '+e.message); }
+  btn.disabled = false; btn.textContent = 'Save key';
+}
+
+async function saveBackends(){
+  const brain = $('brainBackendSelect').value;
+  const vision = $('visionBackendSelect').value;
+  try{
+    const res = await fetch('/api/config', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({brain_backend:brain, vision_backend:vision})
+    });
+    const d = await res.json();
+    if(!res.ok) throw new Error(d.detail || 'failed');
+    toast('Preferences updated 🔥');
+    await health();
+  }catch(e){
+    toast('❌ ' + e.message);
+  }
 }
 
 async function analyze(useSample){
@@ -363,12 +478,14 @@ function render(data){
   $('pVerified').className = 'pill' + (p.verified ? ' ok' : '');
 
   $('summary').textContent = r.summary || '';
-  $('bioBest').textContent = (data.improved && data.improved.bio) || (r.bio_variants[0]||{}).text || '';
+  
+  const bioVal = (data.improved && data.improved.bio) || (r.bio_variants[0]||{}).text || '';
+  $('bioBest').value = bioVal;
 
   $('bioVariants').innerHTML = (r.bio_variants||[]).map((v,i)=>`
     <div class="item">
       <span class="chip">${esc(v.tone)}</span>
-      <div class="biotext" id="bv${i}" style="font-size:15.5px;margin:11px 0 0">${esc(v.text)}</div>
+      <textarea id="bv${i}" style="width:100%; min-height:80px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical; margin:11px 0 8px; outline:none;" class="biotext">${esc(v.text)}</textarea>
       <div class="meta">${(v.char_count||v.text.length)} chars</div>
       <div class="why">${esc(v.rationale)}</div>
       <div style="margin-top:11px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -379,12 +496,17 @@ function render(data){
 
   const prompts = r.improved_prompts && r.improved_prompts.length ? r.improved_prompts : null;
   if(prompts){
+    window.currentPrompts = prompts;
     const oldByQ = {}; (p.prompts||[]).forEach(x=>oldByQ[x.q]=x.a);
-    $('prompts').innerHTML = prompts.map(pr=>`
+    $('prompts').innerHTML = prompts.map((pr, i)=>`
       <div class="item qa">
         <div class="q">${esc(pr.q)}</div>
         ${oldByQ[pr.q]?`<div class="old">${esc(oldByQ[pr.q])}</div>`:''}
-        <div class="new">${esc(pr.a)}</div>
+        <input type="text" id="prAnswer${i}" style="width:100%; margin-top:8px; margin-bottom:8px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px;" value="${esc(pr.a)}" />
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="copy" data-copy="prAnswer${i}">Copy</button>
+          <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="updateTinderPrompt(${i}, 'prAnswer${i}')">Update to Tinder 🔥</button>
+        </div>
       </div>`).join('');
     show($('promptCard'));
   } else { hide($('promptCard')); }
@@ -403,6 +525,50 @@ function render(data){
   }).join('') || '<div class="note">No photo analysis available (vision is off in the web app).</div>';
 
   $('gaps').innerHTML = (r.gaps||[]).map(g=>`<span class="gap">${esc(g)}</span>`).join('') || '<span class="note">None flagged. 🎉</span>';
+
+  // Populate Habits & Descriptors Guide
+  const descMap = {};
+  (p.descriptors||[]).forEach(d => {
+    if (d && d.name && d.value) {
+      descMap[d.name.toLowerCase()] = d.value;
+    }
+  });
+  const habits = [
+    {
+      name: 'Smoking',
+      current: descMap['smoking'] || descMap['smoker'] || 'Not set',
+      tip: 'Declaring "Never" smoking boosts match rates by up to 25% among health-conscious matches. If you smoke socially, declare it honestly, but avoid showing smoking in photos.'
+    },
+    {
+      name: 'Drinking',
+      current: descMap['drinking'] || 'Not set',
+      tip: '"Socially" is the optimal setting in the Indian market. "Never" is great if true. Avoid "Frequent" as it can read as party-focused.'
+    },
+    {
+      name: 'Exercise',
+      current: descMap['exercise'] || descMap['workout'] || 'Not set',
+      tip: 'Active lifestyles (e.g. "Often" or "Sometimes") signal high energy and health. Pair this with an outdoors/sports photo to build trust.'
+    },
+    {
+      name: 'Relationship Type / Intent',
+      current: p.intent || 'Not set',
+      tip: 'Indian Gen Z/Millennials increasingly value authenticity and clear intent (e.g. "Long-term" or "Long-term, open to short"). Align this strictly with your bio.'
+    },
+    {
+      name: 'Height',
+      current: descMap['height'] || 'Not set',
+      tip: 'If you are 5\'9" or above, adding your height acts as a positive signal in the Indian market. If you are shorter, it is better to leave it empty.'
+    }
+  ];
+  $('habitsGuide').innerHTML = habits.map(h => `
+    <div class="item" style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; margin-bottom: 4px;">
+        <span style="font-weight: 700; color: #ff7a8c;">${esc(h.name)}</span>
+        <span class="pill" style="font-size: 11.5px; padding: 2px 8px;">Current: ${esc(h.current)}</span>
+      </div>
+      <div class="why" style="margin-top: 2px; font-size: 13.5px; line-height: 1.4;">${esc(h.tip)}</div>
+    </div>
+  `).join('');
 
   const res = $('results');
   show(res); res.classList.remove('enter'); void res.offsetWidth; res.classList.add('enter');
@@ -444,8 +610,9 @@ async function runSetup(){
 }
 
 async function updateTinderBio(elementId){
-  const bioText = $(elementId).textContent.trim();
-  const token = $('token').value.trim();
+  const el = $(elementId);
+  const bioText = (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' ? el.value : el.textContent).trim();
+  const token = ($('token').value || $('tokenDesc').value || '').trim();
   if(!token){
     toast('❌ Paste your Tinder X-Auth-Token first!');
     $('inputCard').scrollIntoView({behavior:'smooth'});
@@ -471,16 +638,106 @@ async function updateTinderBio(elementId){
   btn.textContent = originalText;
 }
 
+async function updateTinderPrompt(index, elementId){
+  if (!window.currentPrompts || !window.currentPrompts[index]) {
+    toast('❌ Prompt data mismatch. Please re-run analysis.');
+    return;
+  }
+  const questionText = window.currentPrompts[index].q;
+  const el = $(elementId);
+  const answerText = el.value.trim();
+  const token = ($('token').value || $('tokenDesc').value || '').trim();
+  if(!token){
+    toast('❌ Paste your Tinder X-Auth-Token first!');
+    $('inputCard').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Updating… 🚀';
+  try{
+    const res = await fetch('/api/update-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, question_text: questionText, answer_text: answerText })
+    });
+    const d = await res.json();
+    if(!res.ok) throw new Error(d.detail || 'Failed to update');
+    toast('🎉 Tinder Prompt Updated Successfully! 🔥');
+  }catch(e){
+    toast('❌ ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = originalText;
+}
+
+async function generateFromDesc() {
+  hide($('errorCard')); hide($('results')); $('results').classList.remove('enter');
+  show($('loadingCard'));
+  $('loadMsg').textContent = 'Generating profile from description… 🚀';
+  try{
+    const desc = $('selfDescription').value.trim();
+    if(!desc){
+      throw new Error('Please enter your self-description first!');
+    }
+    const res = await fetch('/api/generate-profile', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({description: desc})
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.detail || 'Generation failed');
+    render(data);
+  }catch(e){
+    hide($('loadingCard'));
+    $('errorMsg').textContent = e.message;
+    show($('errorCard'));
+  }
+}
+
+// Tab Switching
+$('tabLive').onclick = () => {
+  $('tabLive').style.opacity = '1';
+  $('tabLive').style.borderBottom = '2px solid var(--accent)';
+  $('tabLive').style.color = 'var(--accent)';
+  $('tabDesc').style.opacity = '0.6';
+  $('tabDesc').style.borderBottom = 'none';
+  $('tabDesc').style.color = 'var(--ink)';
+  show($('modeLiveContainer'));
+  hide($('modeDescContainer'));
+};
+
+$('tabDesc').onclick = () => {
+  $('tabDesc').style.opacity = '1';
+  $('tabDesc').style.borderBottom = '2px solid var(--accent)';
+  $('tabDesc').style.color = 'var(--accent)';
+  $('tabLive').style.opacity = '0.6';
+  $('tabLive').style.borderBottom = 'none';
+  $('tabLive').style.color = 'var(--ink)';
+  show($('modeDescContainer'));
+  hide($('modeLiveContainer'));
+};
+
 document.addEventListener('click', e=>{
   const c = e.target.getAttribute && e.target.getAttribute('data-copy');
-  if(c){ navigator.clipboard.writeText($(c).textContent.trim()); toast('Copied! 🔥'); }
+  if(c){
+    const el = $(c);
+    const textToCopy = (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' ? el.value : el.textContent).trim();
+    navigator.clipboard.writeText(textToCopy);
+    toast('Copied! 🔥');
+  }
 });
 $('setupBtn').onclick = runSetup;
 $('saveKeyBtn').onclick = saveKey;
+$('saveGeminiKeyBtn').onclick = saveGeminiKey;
 $('hfKey').addEventListener('keydown', e=>{ if(e.key==='Enter') saveKey(); });
+$('geminiKey').addEventListener('keydown', e=>{ if(e.key==='Enter') saveGeminiKey(); });
 $('goBtn').onclick = ()=>analyze(false);
 $('sampleBtn').onclick = ()=>analyze(true);
 $('token').addEventListener('keydown', e=>{ if(e.key==='Enter') analyze(false); });
+$('generateBtn').onclick = generateFromDesc;
+$('tokenDesc').addEventListener('keydown', e=>{ if(e.key==='Enter') generateFromDesc(); });
 $('againBtn').onclick = ()=>{ hide($('results')); $('inputCard').scrollIntoView({behavior:'smooth'}); };
 $('downloadBtn').onclick = ()=>{
   if(!lastImproved) return;
@@ -488,6 +745,8 @@ $('downloadBtn').onclick = ()=>{
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = 'improved_profile.json'; a.click();
 };
+$('brainBackendSelect').onchange = saveBackends;
+$('visionBackendSelect').onchange = saveBackends;
 health();
 </script>
 </body>

@@ -27,7 +27,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
-load_dotenv()
+load_dotenv(ROOT / ".env")
 
 from coach import DatingCoach          # noqa: E402
 from connector import TinderConnector  # noqa: E402
@@ -40,9 +40,15 @@ _coach: DatingCoach | None = None
 
 
 def get_coach() -> DatingCoach:
-    """Build the brain once, lazily (so the server starts even if the key is missing;
-    a misconfigured backend then surfaces as a friendly error on /api/analyze)."""
+    """Build the brain once, lazily, and rebuild dynamically if backend preference changes."""
     global _coach
+    backend = os.getenv("LLM_BACKEND", "ollama").lower()
+    if _coach is not None:
+        active_llm_name = _coach.llm.name.lower()
+        if not active_llm_name.startswith(backend):
+            print(f"[coach] LLM backend changed from {active_llm_name} to {backend}. Rebuilding DatingCoach.")
+            _coach = None
+
     if _coach is None:
         _coach = DatingCoach()
     return _coach
@@ -60,7 +66,20 @@ class UpdateBioRequest(BaseModel):
 
 
 class ConfigRequest(BaseModel):
-    hf_token: str
+    hf_token: str | None = None
+    gemini_token: str | None = None
+    brain_backend: str | None = None
+    vision_backend: str | None = None
+
+
+class UpdatePromptRequest(BaseModel):
+    token: str
+    question_text: str
+    answer_text: str
+
+
+class GenerateProfileRequest(BaseModel):
+    description: str
 
 
 def _update_env(updates: dict[str, str]) -> None:
@@ -109,25 +128,71 @@ def setup(model: str | None = None) -> StreamingResponse:
 @app.get("/api/health")
 def health() -> dict:
     backend = os.getenv("LLM_BACKEND", "ollama").lower()
-    model = os.getenv("HF_MODEL") if backend == "hf" else os.getenv("OLLAMA_MODEL", "llama3.1")
-    key_present = bool(os.getenv("HUGGINGFACEHUB_API_TOKEN")) if backend == "hf" else True
-    return {"backend": backend, "model": model, "key_present": key_present,
-            "vision_ready": _vision_ready(), "vision_model": os.getenv("VISION_MODEL", "moondream")}
+    model = os.getenv("HF_MODEL") if backend == "hf" else (os.getenv("GEMINI_MODEL", "gemini-2.5-flash") if backend == "gemini" else os.getenv("OLLAMA_MODEL", "llama3.1"))
+    
+    if backend == "hf":
+        key_present = bool(os.getenv("HUGGINGFACEHUB_API_TOKEN"))
+    elif backend == "gemini":
+        key_present = bool(os.getenv("GEMINI_API_KEY"))
+    else:
+        key_present = True
+        
+    vision_backend = os.getenv("VISION_BACKEND", "gemini" if os.getenv("GEMINI_API_KEY") else "ollama").lower()
+        
+    return {
+        "backend": backend,
+        "model": model,
+        "key_present": key_present,
+        "gemini_present": bool(os.getenv("GEMINI_API_KEY")),
+        "vision_ready": _vision_ready(),
+        "vision_model": os.getenv("VISION_MODEL", "moondream"),
+        "vision_backend": vision_backend
+    }
 
 
 @app.post("/api/config")
 def config(req: ConfigRequest) -> dict:
-    """Save the HF API key into .env (once), switch the text brain to HF, and reload."""
+    """Save the HF API key, Gemini key, and/or backend selections into .env, and reload."""
     global _coach
-    token = (req.hf_token or "").strip()
-    if not token.startswith("hf_"):
-        raise HTTPException(status_code=400, detail="That doesn't look like a Hugging Face token (it should start with “hf_”).")
-    updates = {"HUGGINGFACEHUB_API_TOKEN": token, "LLM_BACKEND": "hf"}
-    if not os.getenv("HF_MODEL"):
-        updates["HF_MODEL"] = "Qwen/Qwen2.5-72B-Instruct"   # a strong free default
-    _update_env(updates)
-    load_dotenv(override=True)   # refresh process env from the new .env
-    _coach = None                # rebuild the brain with the new key/backend on next call
+    updates = {}
+    
+    if req.hf_token is not None:
+        token = req.hf_token.strip()
+        if token and not token.startswith("hf_"):
+            raise HTTPException(status_code=400, detail="That doesn't look like a Hugging Face token (it should start with “hf_”).")
+        if token:
+            updates["HUGGINGFACEHUB_API_TOKEN"] = token
+            if req.brain_backend is None:
+                updates["LLM_BACKEND"] = "hf"
+            if not os.getenv("HF_MODEL"):
+                updates["HF_MODEL"] = "Qwen/Qwen2.5-72B-Instruct"
+
+    if req.gemini_token is not None:
+        token = req.gemini_token.strip()
+        if token and not token.startswith("AIzaSy"):
+            raise HTTPException(status_code=400, detail="That doesn't look like a Google Gemini API key.")
+        if token:
+            updates["GEMINI_API_KEY"] = token
+            if req.brain_backend is None:
+                updates["LLM_BACKEND"] = "gemini"
+
+    if req.brain_backend is not None:
+        backend = req.brain_backend.strip().lower()
+        if backend in ["hf", "gemini", "ollama"]:
+            updates["LLM_BACKEND"] = backend
+
+    if req.vision_backend is not None:
+        v_backend = req.vision_backend.strip().lower()
+        if v_backend in ["gemini", "ollama"]:
+            updates["VISION_BACKEND"] = v_backend
+            
+    if updates:
+        _update_env(updates)
+        for k, v in updates.items():
+            os.environ[k] = v
+        load_dotenv(ROOT / ".env", override=True)
+        _coach = None
+        
     return health()
 
 
@@ -163,6 +228,25 @@ def analyze(req: AnalyzeRequest) -> dict:
         raise HTTPException(status_code=400, detail=f"{type(e).__name__}: {e}")
 
 
+@app.post("/api/generate-profile")
+def generate_profile(req: GenerateProfileRequest) -> dict:
+    try:
+        desc = req.description.strip()
+        if not desc:
+            raise HTTPException(status_code=400, detail="Description text cannot be empty.")
+            
+        result = get_coach().generate_profile_from_description(desc)
+        return {
+            "profile": json.loads(result.improved_profile.model_dump_json()),
+            "report": json.loads(result.report.model_dump_json()),
+            "improved": json.loads(result.improved_profile.model_dump_json()),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"{type(e).__name__}: {e}")
+
+
 @app.post("/api/update-bio")
 def update_bio(req: UpdateBioRequest) -> dict:
     try:
@@ -176,6 +260,87 @@ def update_bio(req: UpdateBioRequest) -> dict:
         conn = TinderConnector(auth_token=token)
         res = conn.update_my_bio(bio, confirm=True)
         return {"ok": True, "detail": "Profile bio updated live on Tinder!", "response": res}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Update failed: {e}")
+
+
+@app.post("/api/update-prompt")
+def update_prompt(req: UpdatePromptRequest) -> dict:
+    try:
+        token = req.token.strip()
+        if not token:
+            raise HTTPException(status_code=400, detail="Missing Tinder token.")
+        question_text = req.question_text.strip()
+        if not question_text:
+            raise HTTPException(status_code=400, detail="Question text cannot be empty.")
+        answer_text = req.answer_text.strip()
+        if not answer_text:
+            raise HTTPException(status_code=400, detail="Answer text cannot be empty.")
+        
+        conn = TinderConnector(auth_token=token)
+        profile = conn.get_my_profile()
+        
+        if not profile.prompts:
+            raise HTTPException(
+                status_code=400,
+                detail="You don't have any prompts active on your Tinder profile. Please add a prompt on the Tinder mobile app first, then you can update it here!"
+            )
+        
+        def _normalize(s: str) -> str:
+            import html
+            s = html.unescape(s)
+            return "".join(c.lower() for c in s if c.isalnum())
+
+        prompt_id = None
+        question_id = None
+        norm_target = _normalize(question_text)
+        
+        # 1. Strict normalized match
+        for p in profile.prompts:
+            if _normalize(p.get("q", "")) == norm_target:
+                prompt_id = p.get("id")
+                question_id = p.get("question_id")
+                break
+                
+        # 2. Substring matching (e.g. "together we could" vs "together, we could...")
+        if not prompt_id or not question_id:
+            for p in profile.prompts:
+                pq = _normalize(p.get("q", ""))
+                if pq and norm_target and (pq in norm_target or norm_target in pq):
+                    prompt_id = p.get("id")
+                    question_id = p.get("question_id")
+                    break
+                    
+        # 3. Key words intersection
+        if not prompt_id or not question_id:
+            def _get_words(s: str) -> set[str]:
+                return set(re.findall(r"\w+", s.lower()))
+            target_words = _get_words(question_text)
+            best_overlap = 0
+            for p in profile.prompts:
+                pq_words = _get_words(p.get("q", ""))
+                overlap = len(target_words.intersection(pq_words))
+                if overlap > best_overlap and overlap >= 2:
+                    best_overlap = overlap
+                    prompt_id = p.get("id")
+                    question_id = p.get("question_id")
+                    
+        # 4. Fallback to first prompt if there is only 1 prompt active
+        if not prompt_id or not question_id:
+            if len(profile.prompts) == 1:
+                prompt_id = profile.prompts[0].get("id")
+                question_id = profile.prompts[0].get("question_id")
+                
+        if not prompt_id or not question_id:
+            raise HTTPException(
+                status_code=404, 
+                detail="Matching prompt question not found on your profile. Please ensure the prompt exists on Tinder."
+            )
+            
+        res = conn.update_my_prompt(prompt_id, question_id, answer_text, confirm=True)
+        return {"ok": True, "detail": "Profile prompt updated live on Tinder!", "response": res}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Update failed: {e}")
 

@@ -142,3 +142,37 @@ class DatingCoach:
             + "\n\nThe MATCH and our conversation so far:\n\n" + match.model_dump_json(indent=2)
         )
         return _parse(DraftSet, self.llm.generate(system, user))
+
+    def generate_profile_from_description(self, description: str) -> ImprovementResult:
+        """User description text -> new optimized ProfileReport and Profile."""
+        task = """You are a high-effort dating-profile coach for the Indian market.
+Given a raw self-description by the user explaining their personality, daily life, work, hobbies, habits, and preferences:
+Generate a highly optimized, brand new Tinder profile report that aligns with their facts.
+You must return a JSON response matching the `ProfileReport` Pydantic model:
+- overall_score: 100
+- bio_score: 100
+- photo_score: 100
+- summary: A summary explaining the strategy of the generated profile.
+- bio_variants: 3 creative, high-impact bio options of different tones (sincere, playful, witty) matching their description. Each 120-300 chars, showing instead of telling, and ending with a single hook.
+- improved_prompts: 3 prompt suggestions with questions and answers based on their hobbies/facts (e.g. [{"q": "Together, we could...", "a": "blind taste-test the best street momos in Indiranagar"}]).
+- photo_assessments: Empty list.
+- recommended_photo_order: Empty list.
+- prompt_suggestions: 3 prompt ideas they can add.
+- gaps: Any gaps in their self-description (e.g. if they did not mention smoking/drinking habits, height, relationship type, or workout).
+"""
+        system = self._system(task, ProfileReport)
+        user = f"User self-description:\n\n{description}"
+        report = _parse(ProfileReport, self.llm.generate(system, user))
+        
+        # Create a mock Profile object with the first bio and generated prompts
+        first_bio = report.bio_variants[0].text if report.bio_variants else ""
+        mock_profile = Profile(
+            name="New Profile",
+            age=24,
+            city="India",
+            bio=first_bio,
+            prompts=report.improved_prompts,
+            photos=[],
+            intent="unsure"
+        )
+        return ImprovementResult(report=report, improved_profile=mock_profile)

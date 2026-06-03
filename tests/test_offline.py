@@ -160,3 +160,134 @@ def test_web_update_bio_requires_inputs():
     assert r.status_code == 400
 
 
+def test_web_update_prompt_requires_inputs():
+    r = _web_client().post("/api/update-prompt", json={"token": "", "question_text": "q", "answer_text": "a"})
+    assert r.status_code == 400
+    r = _web_client().post("/api/update-prompt", json={"token": "tok", "question_text": "", "answer_text": "a"})
+    assert r.status_code == 400
+    r = _web_client().post("/api/update-prompt", json={"token": "tok", "question_text": "q", "answer_text": ""})
+    assert r.status_code == 400
+
+
+def test_web_config_handles_gemini_token(monkeypatch):
+    # Mocking _update_env and load_dotenv to not write to actual files or overwrite env during test
+    import app
+    def mock_update_env(updates):
+        for k, v in updates.items():
+            monkeypatch.setenv(k, v)
+    monkeypatch.setattr(app, "_update_env", mock_update_env)
+    monkeypatch.setattr(app, "load_dotenv", lambda *args, **kwargs: None)
+    
+    r = _web_client().post("/api/config", json={"gemini_token": "AIzaSy_test_gemini_token"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body.get("gemini_present") is True
+
+
+def test_connector_update_prompt_confirm_check(monkeypatch):
+    import tinder
+    import types
+    monkeypatch.setattr(tinder.tinder.TinderClient, "get_self_user", lambda self: types.SimpleNamespace(id="me"))
+    from connector import TinderConnector
+    conn = TinderConnector(auth_token="test_token")
+    with pytest.raises(RuntimeError):
+        conn.update_my_prompt("p1", "q1", "a1", confirm=False)
+
+
+def test_gemini_backend_constructs_offline():
+    os.environ["LLM_BACKEND"] = "gemini"
+    os.environ["GEMINI_API_KEY"] = "AIzaSy_mock_key"
+    from llm import make_llm
+    llm = make_llm()
+    assert llm.name.startswith("gemini:")
+
+
+def test_web_config_handles_backend_selections(monkeypatch):
+    import app
+    def mock_update_env(updates):
+        for k, v in updates.items():
+            monkeypatch.setenv(k, v)
+    monkeypatch.setattr(app, "_update_env", mock_update_env)
+    monkeypatch.setattr(app, "load_dotenv", lambda *args, **kwargs: None)
+    
+    r = _web_client().post("/api/config", json={
+        "brain_backend": "gemini",
+        "vision_backend": "ollama"
+    })
+    assert r.status_code == 200
+    body = r.json()
+    assert body.get("backend") == "gemini"
+    assert body.get("vision_backend") == "ollama"
+
+
+def test_web_generate_profile_requires_description():
+    r = _web_client().post("/api/generate-profile", json={"description": ""})
+    assert r.status_code == 400
+
+
+def test_web_generate_profile_executes(monkeypatch):
+    import app
+    from schema import ProfileReport, Profile, ImprovementResult
+    
+    dummy_report = ProfileReport(
+        photo_score=100,
+        bio_score=100,
+        overall_score=100,
+        summary="Test summary",
+        bio_variants=[],
+        photo_assessments=[],
+        recommended_photo_order=[],
+        prompt_suggestions=[],
+        gaps=[],
+        improved_prompts=[]
+    )
+    dummy_profile = Profile(name="New Profile", age=24, city="India", bio="Test bio")
+    dummy_result = ImprovementResult(report=dummy_report, improved_profile=dummy_profile)
+    
+    # Mock DatingCoach.generate_profile_from_description
+    monkeypatch.setattr(
+        app.get_coach(), 
+        "generate_profile_from_description", 
+        lambda desc: dummy_result
+    )
+    
+    r = _web_client().post("/api/generate-profile", json={"description": "I am a developer"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["profile"]["name"] == "New Profile"
+    assert body["report"]["summary"] == "Test summary"
+
+
+def test_web_update_prompt_with_normalization(monkeypatch):
+    import app
+    from schema import Profile
+    
+    class MockConnector:
+        def __init__(self, auth_token):
+            pass
+        def get_my_profile(self):
+            return Profile(
+                name="Test",
+                age=24,
+                city="Mumbai",
+                prompts=[
+                    {"q": "What&#x27;s your favorite coffee spot?", "id": "p1", "question_id": "q1", "a": "cafe"}
+                ]
+            )
+        def update_my_prompt(self, prompt_id, question_id, new_answer, confirm):
+            return {"status": "ok"}
+            
+    monkeypatch.setattr(app, "TinderConnector", MockConnector)
+    
+    # Matching prompt question "What's your favorite coffee spot?" against "What&#x27;s your favorite coffee spot?"
+    r = _web_client().post("/api/update-prompt", json={
+        "token": "test_token",
+        "question_text": "What's your favorite coffee spot?",
+        "answer_text": "new coffee shop"
+    })
+    assert r.status_code == 200
+    body = r.json()
+    assert body.get("ok") is True
+
+
+
