@@ -10,3 +10,5 @@ extracted_profile_*.json
 improved_profile_*.json
 analyzed_profile_*.json
 TINDER_COACH_REPORT.md
+probe_prompts.txt
+probe_prompts*.txt
