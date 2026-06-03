@@ -11,6 +11,76 @@ Format:
 - blocked/notes: <anything needing a human or a decision>
 ```
 
+## ▶▶ TASK FOR ANTIGRAVITY (laptop) — run these, capture to probe_prompts.txt, push
+Goal: discover (A) the working prompt-WRITE endpoint and (B) the prompt CATALOG, so desktop/Claude
+can finalize prompt create. Run on the home network with a CURRENT Tinder token.
+
+PREREQ — get a fresh token:
+- Use `TINDER_X_AUTH_TOKEN` from `.env` if it's still valid, OR ask Dinesh to paste a fresh one
+  (tinder.com → F12 → Network → filter `api.gotinder.com` → copy `X-Auth-Token`).
+- In the commands below, replace `TOKEN` with that value.
+
+STEP 1 — write-test + raw dump (this OVERWRITES probe_prompts.txt with a clean capture):
+```
+cd ~/coding/PROJECTS/TINDER_MCP_AI
+git pull
+python3 src/probe_prompts.py TOKEN --write-test pro_4 "TESTXYZ" > probe_prompts.txt 2>&1
+```
+
+STEP 2 — hunt the catalog inside the static bundle (appends to the same file):
+```
+H_AUTH="X-Auth-Token: TOKEN"
+H_UA="User-Agent: Tinder/14.21.0 (iPhone; iOS 16.6.1; Scale/3.00)"
+curl -s -H "$H_AUTH" -H "$H_UA" "https://data.gotinder.com/v3/publish/app/json" -o /tmp/app.json
+{
+  echo; echo "=== app.json size ==="; wc -c /tmp/app.json
+  echo "=== context around known prompt text / ids ==="
+  grep -o '.\{60\}key to my heart.\{120\}' /tmp/app.json | head -5
+  grep -o '.\{40\}"pro_4".\{120\}'        /tmp/app.json | head -5
+  grep -o '.\{40\}question_text.\{120\}'  /tmp/app.json | head -5
+} >> probe_prompts.txt 2>&1
+python3 - >> probe_prompts.txt 2>&1 <<'PY'
+import json
+try:
+    d = json.load(open('/tmp/app.json'))
+except Exception as e:
+    print("app.json not JSON:", e); raise SystemExit
+print("TOP-LEVEL KEYS:", list(d.keys()) if isinstance(d, dict) else type(d).__name__)
+hits = []
+def walk(o, p=''):
+    if isinstance(o, dict):
+        # a prompt-catalog node: has an id like pro_X + some text, no answer
+        idv = o.get('id') or o.get('question_id')
+        txt = o.get('question_text') or o.get('text') or o.get('name') or o.get('prompt')
+        if idv and txt and 'answer_text' not in o:
+            hits.append((p, idv, str(txt)[:60]))
+        for k, v in o.items(): walk(v, p + '/' + k)
+    elif isinstance(o, list):
+        for i, v in enumerate(o): walk(v, p + f'[{i}]')
+walk(d)
+print(f"CANDIDATE CATALOG ENTRIES FOUND: {len(hits)}")
+for p, idv, txt in hits[:60]:
+    print(f"  {p}  id={idv}  text={txt}")
+PY
+```
+
+STEP 3 — push so desktop can read it:
+```
+git add probe_prompts.txt && git commit -m "probe: prompt write-test + app.json catalog hunt" && git push
+```
+
+WHAT TO REPORT (it'll all be in probe_prompts.txt automatically):
+- Does any write candidate print "✅ PERSISTED"? Which method/URL/payload?
+- The RAW user_prompts dump — any extra fields (position / a uuid distinct from pro_X)?
+- Did the catalog hunt find entries in app.json? At what JSON path, and what do the ids look like?
+
+IF STEP 1 shows NOTHING persisted AND STEP 2 finds no catalog → prompts are mobile-app-only.
+Then it needs a phone capture (HUMAN step for Dinesh, not Antigravity): mitmproxy on the phone,
+edit a prompt in the Tinder app, capture the POST/PUT request + body, paste it here. Note that in
+probe_prompts.txt and stop.
+
+---
+
 ## 2026-06-03 (prompts pt.3) — desktop / Claude Code
 - learned (from write-test + captured URLs): `POST /v2/profile` does NOT persist prompts (all 4 shapes
   200-but-no-change). Real app's include list has `available_descriptors` but NO `available_prompts`,
