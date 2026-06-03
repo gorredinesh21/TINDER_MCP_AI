@@ -111,6 +111,19 @@ def test_setup_error_classifier():
     assert classify("totally fine, no errors here") == ""          # clean -> no false hint
 
 
+def test_prompt_writes_require_confirm():
+    """All live prompt writes must refuse without confirm=True, before any network call."""
+    from connector import TinderConnector
+    c = object.__new__(TinderConnector)   # bypass __init__ (no token/network needed)
+    c._token = "x"
+    with pytest.raises(RuntimeError):
+        c.set_prompts([], confirm=False)
+    with pytest.raises(RuntimeError):
+        c.create_prompt("q", "a", confirm=False)
+    with pytest.raises(RuntimeError):
+        c.update_my_prompt("p", "q", "a", confirm=False)
+
+
 def _web_client():
     import sys
     from pathlib import Path

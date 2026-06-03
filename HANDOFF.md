@@ -11,6 +11,30 @@ Format:
 - blocked/notes: <anything needing a human or a decision>
 ```
 
+## 2026-06-03 (prompts) — desktop / Claude Code
+- why: The "Update prompt" button fails with "such prompts are not found" because the profile has
+  ZERO prompts and the old `/api/update-prompt` can only EDIT existing prompts — it can't CREATE.
+- did: Added prompt CREATE support + a live discovery path (endpoints are undocumented, written from
+  knowledge, NOT yet verified live — that's the laptop's job):
+  • `connector.fetch_available_prompts()` probes 6 candidate catalog endpoints and returns each one's
+    status+body; `parse_available_prompts()` extracts [{question_id, question_text}] from the winner.
+  • `connector.set_prompts(full_list)` writes the WHOLE prompt set (Tinder replaces the set, so we
+    never send just one or it wipes the others). `create_prompt(question_id, answer_text)` =
+    fetch current → append → write all. `update_my_prompt` refactored to re-send the full set.
+  • app endpoints: `POST /api/available-prompts`, `POST /api/create-prompt`.
+  • `src/probe_prompts.py` — run this on the LAPTOP to discover the real endpoint.
+  Tests 24/24 (offline confirm-refusal test added; live calls untested here — no token, API 403 on this net).
+- next (LAPTOP — please do this and paste results back):
+  1. `python src/probe_prompts.py <fresh-X-Auth-Token>` — it prints your current prompts, probes all
+     candidate catalog endpoints (which returns 200? what JSON?), and the parsed question list.
+  2. Once we know the working catalog endpoint + question_id format, try:
+     `python src/probe_prompts.py <token> --create <question_id> "a real answer"` and confirm a prompt
+     appears on the profile (Tinder app / re-run analyze).
+  3. Report back the winning endpoint + payload shape so we finalize `fetch_available_prompts` /
+     `create_prompt`, wire the dashboard UI, THEN integrate the AI (auto-pick prompts + write answers).
+- blocked/notes: catalog endpoint + create payload are best-guess until step 1 confirms them. All
+  writes require confirm=True; AI never auto-writes.
+
 ## 2026-06-03 — office laptop / Antigravity
 - did: Integrated Google Gemini for fast vision photo analysis, enabled direct prompt updates on Tinder, introduced toggleable engine selectors, and added description-based profile generation:
   * **Gemini Vision**: Integrated `gemini-2.5-flash` API for photo analysis in `src/vision.py`. The app will automatically use Gemini if `GEMINI_API_KEY` is configured in `.env`, falling back to local Ollama vision if needed.

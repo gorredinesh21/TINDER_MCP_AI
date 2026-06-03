@@ -196,39 +196,120 @@ class TinderConnector:
         res.raise_for_status()
         return res.json()
 
-    def update_my_prompt(self, prompt_id: str, question_id: str, new_answer: str, confirm: bool = False) -> dict:
-        """Push an updated prompt answer to YOUR OWN profile. MANUAL-CONFIRM only.
+    # ---------- prompts: create + update (reverse-engineered — VERIFY LIVE via probe_prompts.py) ----------
 
-        Uses the same mobile User-Agent to POST to v2/profile.
-        """
-        if not confirm:
-            raise RuntimeError(
-                "update_my_prompt refused: pass confirm=True to actually change your live prompt."
-            )
-        import requests as _req
-        headers = {
+    def _api_headers(self) -> dict:
+        return {
             "X-Auth-Token": self._token,
             "User-Agent": "Tinder/14.21.0 (iPhone; iOS 16.6.1; Scale/3.00)",
+            "platform": "ios",
             "Content-Type": "application/json",
         }
-        payload = {
-            "user_prompts": {
-                "prompts": [
-                    {
-                        "id": prompt_id,
-                        "question_id": question_id,
-                        "answer_text": new_answer
-                    }
-                ]
-            }
-        }
-        res = _req.post(
-            "https://api.gotinder.com/v2/profile",
-            headers=headers,
-            json=payload,
-        )
-        res.raise_for_status()
-        return res.json()
+
+    def _raw_user_prompts(self) -> list[dict]:
+        """Your current prompts straight from the live profile (id, question_id, answer_text)."""
+        import requests as _req
+        r = _req.get("https://api.gotinder.com/v2/profile?include=user",
+                     headers=self._api_headers(), timeout=15)
+        r.raise_for_status()
+        user = r.json().get("data", {}).get("user", {})
+        out: list[dict] = []
+        for p in user.get("user_prompts", {}).get("prompts", []):
+            out.append({k: p.get(k) for k in ("id", "question_id", "question_text", "answer_text")
+                        if p.get(k) is not None})
+        return out
+
+    def fetch_available_prompts(self) -> dict:
+        """Discover Tinder's catalog of selectable prompt QUESTIONS.
+
+        The catalog endpoint is undocumented, so we probe several known candidates and return each
+        one's status + payload. Run src/probe_prompts.py live to see which works; then
+        parse_available_prompts() pulls the question list out of the winner.
+        """
+        import requests as _req
+        candidates = [
+            "https://api.gotinder.com/v2/profile/prompts",
+            "https://api.gotinder.com/v2/profile?include=available_prompts",
+            "https://api.gotinder.com/v2/profile?include=prompts",
+            "https://api.gotinder.com/v2/prompts",
+            "https://api.gotinder.com/v2/profile/promptlist",
+            "https://api.gotinder.com/v2/dynamic-ui/configuration?include=prompts",
+        ]
+        results: dict = {}
+        for url in candidates:
+            try:
+                r = _req.get(url, headers=self._api_headers(), timeout=15)
+                ct = r.headers.get("content-type", "")
+                results[url] = {"status": r.status_code,
+                                "body": r.json() if ct.startswith("application/json") else r.text[:400]}
+            except Exception as e:
+                results[url] = {"error": str(e)}
+        return results
+
+    @staticmethod
+    def parse_available_prompts(raw: dict) -> list[dict]:
+        """Best-effort: pull [{question_id, question_text}] out of whatever a candidate returned.
+        Walks the JSON looking for objects that carry a question id + text but no answer."""
+        found: list[dict] = []
+
+        def walk(obj):
+            if isinstance(obj, dict):
+                qid = obj.get("question_id") or obj.get("id")
+                qtext = obj.get("question_text") or obj.get("text") or obj.get("prompt") or obj.get("name")
+                if qid and qtext and "answer_text" not in obj:
+                    found.append({"question_id": qid, "question_text": qtext})
+                for v in obj.values():
+                    walk(v)
+            elif isinstance(obj, list):
+                for v in obj:
+                    walk(v)
+
+        for entry in raw.values():
+            if isinstance(entry, dict) and entry.get("status") == 200:
+                walk(entry.get("body"))
+        seen, uniq = set(), []
+        for f in found:
+            if f["question_id"] not in seen:
+                seen.add(f["question_id"]); uniq.append(f)
+        return uniq
+
+    def set_prompts(self, prompts: list[dict], confirm: bool = False) -> dict:
+        """Write the FULL prompt list to your own profile (Tinder replaces the whole set, so we
+        always send every prompt — never just one — to avoid wiping the others).
+        Each item: {"question_id":.., "answer_text":.., optional "id" for an existing one}."""
+        if not confirm:
+            raise RuntimeError("set_prompts refused: pass confirm=True to change your live prompts.")
+        import requests as _req
+        clean = [{k: p[k] for k in ("id", "question_id", "answer_text") if p.get(k)} for p in prompts]
+        r = _req.post("https://api.gotinder.com/v2/profile",
+                      headers=self._api_headers(), json={"user_prompts": {"prompts": clean}}, timeout=15)
+        r.raise_for_status()
+        return r.json()
+
+    def create_prompt(self, question_id: str, answer_text: str, confirm: bool = False) -> dict:
+        """Add a NEW prompt answer while keeping existing ones (fetch current → append → write all)."""
+        if not confirm:
+            raise RuntimeError("create_prompt refused: pass confirm=True to change your live profile.")
+        current: list[dict] = []
+        try:
+            current = self._raw_user_prompts()
+        except Exception:
+            pass
+        merged = current + [{"question_id": question_id, "answer_text": answer_text}]
+        return self.set_prompts(merged, confirm=True)
+
+    def update_my_prompt(self, prompt_id: str, question_id: str, new_answer: str, confirm: bool = False) -> dict:
+        """Update an EXISTING prompt's answer (re-sends the full set so others aren't wiped)."""
+        if not confirm:
+            raise RuntimeError("update_my_prompt refused: pass confirm=True to change your live prompt.")
+        current = self._raw_user_prompts()
+        for p in current:
+            if (prompt_id and p.get("id") == prompt_id) or (question_id and p.get("question_id") == question_id):
+                p["answer_text"] = new_answer
+                break
+        else:
+            current.append({"question_id": question_id, "answer_text": new_answer})
+        return self.set_prompts(current, confirm=True)
 
     # ---------- mapping ----------
 

@@ -82,6 +82,16 @@ class GenerateProfileRequest(BaseModel):
     description: str
 
 
+class AvailablePromptsRequest(BaseModel):
+    token: str
+
+
+class CreatePromptRequest(BaseModel):
+    token: str
+    question_id: str
+    answer_text: str
+
+
 def _update_env(updates: dict[str, str]) -> None:
     """Update/insert keys in .env without disturbing the rest. Local file, user's own machine."""
     env_path = ROOT / ".env"
@@ -262,6 +272,29 @@ def update_bio(req: UpdateBioRequest) -> dict:
         return {"ok": True, "detail": "Profile bio updated live on Tinder!", "response": res}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Update failed: {e}")
+
+
+@app.post("/api/available-prompts")
+def available_prompts(req: AvailablePromptsRequest) -> dict:
+    """Fetch Tinder's selectable prompt-question catalog (reverse-engineered; verify live)."""
+    try:
+        conn = TinderConnector(auth_token=req.token.strip())
+        raw = conn.fetch_available_prompts()
+        return {"catalog": conn.parse_available_prompts(raw),
+                "endpoint_status": {u: r.get("status", r.get("error")) for u, r in raw.items()}}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"{type(e).__name__}: {e}")
+
+
+@app.post("/api/create-prompt")
+def create_prompt_ep(req: CreatePromptRequest) -> dict:
+    """Create a NEW prompt answer on the user's own profile (keeps existing prompts)."""
+    try:
+        conn = TinderConnector(auth_token=req.token.strip())
+        res = conn.create_prompt(req.question_id.strip(), req.answer_text.strip(), confirm=True)
+        return {"ok": True, "detail": "Prompt created on your Tinder profile!", "response": res}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"create failed: {e}")
 
 
 @app.post("/api/update-prompt")
