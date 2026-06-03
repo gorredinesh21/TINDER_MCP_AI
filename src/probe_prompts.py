@@ -33,6 +33,43 @@ def dump(obj, limit=1800):
     return s if len(s) <= limit else s[:limit] + "\n… (truncated)"
 
 
+def write_test(conn, target_id, answer):
+    """Try several endpoint/payload shapes to set prompt `target_id`'s answer, re-reading after
+    each to see which one actually PERSISTS. This is how we find the real prompt-write path.
+    NOTE: this changes the live answer of that prompt — set it back afterward if you like."""
+    import requests
+    current = conn._raw_user_prompts()
+    full, found = [], False
+    for p in current:
+        e = {"id": p.get("id"), "answer_text": p.get("answer_text")}
+        if p.get("id") == target_id:
+            e["answer_text"] = answer; found = True
+        full.append(e)
+    if not found:
+        full.append({"id": target_id, "answer_text": answer})
+
+    candidates = [
+        ("POST", "https://api.gotinder.com/v2/profile", {"user_prompts": {"prompts": full}}),
+        ("POST", "https://api.gotinder.com/profile",    {"user_prompts": {"prompts": full}}),
+        ("POST", "https://api.gotinder.com/v2/profile", {"prompts": full}),
+        ("PUT",  "https://api.gotinder.com/v2/profile/user_prompts", {"prompts": full}),
+    ]
+    print(f"\n=== WRITE TEST on {target_id} (target answer: {answer!r}) ===")
+    for method, url, body in candidates:
+        try:
+            r = requests.request(method, url, headers=conn._api_headers(), json=body, timeout=15)
+            after = conn._raw_user_prompts()
+            got = next((x.get("answer_text") for x in after if x.get("id") == target_id), None)
+            tag = "✅ PERSISTED" if got == answer else "✗ no change"
+            print(f"[{r.status_code}] {method} {url}  payload_keys={list(body)}  -> answer now {got!r}  {tag}")
+            if got == answer:
+                print(f"   >>> THIS is the working write path: {method} {url}  body={list(body)}")
+                return
+        except Exception as e:
+            print(f"[ERR] {method} {url}: {e}")
+    print("None persisted — the prompt write needs a different endpoint (capture it from tinder.com DevTools).")
+
+
 def main() -> None:
     args = list(sys.argv[1:])
     token = args.pop(0) if args and not args[0].startswith("--") else None
@@ -59,10 +96,14 @@ def main() -> None:
     print(dump(catalog[:40]))
     print(f"({len(catalog)} questions parsed)")
 
+    if "--write-test" in args:
+        i = args.index("--write-test")
+        write_test(conn, args[i + 1], args[i + 2])
+
     if "--create" in args:
         i = args.index("--create")
         qid, ans = args[i + 1], args[i + 2]
-        print(f"\n=== CREATING PROMPT  question_id={qid} ===")
+        print(f"\n=== CREATING PROMPT  id={qid} ===")
         try:
             print(dump(conn.create_prompt(qid, ans, confirm=True)))
             print("→ now re-checking your prompts:")

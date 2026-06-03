@@ -295,7 +295,9 @@ class TinderConnector:
             current = self._raw_user_prompts()
         except Exception:
             pass
-        merged = current + [{"question_id": question_id, "answer_text": answer_text}]
+        # The live read shows prompts use `id` (e.g. "pro_4"), NOT `question_id`. So the question
+        # identifier passed in is written as `id`.
+        merged = current + [{"id": question_id, "answer_text": answer_text}]
         return self.set_prompts(merged, confirm=True)
 
     def update_my_prompt(self, prompt_id: str, question_id: str, new_answer: str, confirm: bool = False) -> dict:

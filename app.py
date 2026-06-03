@@ -336,7 +336,7 @@ def update_prompt(req: UpdatePromptRequest) -> dict:
                 break
                 
         # 2. Substring matching (e.g. "together we could" vs "together, we could...")
-        if not prompt_id or not question_id:
+        if not prompt_id:
             for p in profile.prompts:
                 pq = _normalize(p.get("q", ""))
                 if pq and norm_target and (pq in norm_target or norm_target in pq):
@@ -345,7 +345,7 @@ def update_prompt(req: UpdatePromptRequest) -> dict:
                     break
                     
         # 3. Key words intersection
-        if not prompt_id or not question_id:
+        if not prompt_id:
             def _get_words(s: str) -> set[str]:
                 return set(re.findall(r"\w+", s.lower()))
             target_words = _get_words(question_text)
@@ -359,12 +359,12 @@ def update_prompt(req: UpdatePromptRequest) -> dict:
                     question_id = p.get("question_id")
                     
         # 4. Fallback to first prompt if there is only 1 prompt active
-        if not prompt_id or not question_id:
+        if not prompt_id:
             if len(profile.prompts) == 1:
                 prompt_id = profile.prompts[0].get("id")
                 question_id = profile.prompts[0].get("question_id")
                 
-        if not prompt_id or not question_id:
+        if not prompt_id:
             raise HTTPException(
                 status_code=404, 
                 detail="Matching prompt question not found on your profile. Please ensure the prompt exists on Tinder."

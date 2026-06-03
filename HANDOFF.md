@@ -11,6 +11,28 @@ Format:
 - blocked/notes: <anything needing a human or a decision>
 ```
 
+## 2026-06-03 (prompts pt.2) — desktop / Claude Code
+- learned from the live probe (`probe_prompts.txt`, thanks): profile HAS 2 prompts; the field is
+  **`id`** (e.g. `pro_4`, `pro_14`) and there is **NO `question_id`**. Catalog endpoints all came back
+  empty/404. The create POST returned 200 but did NOT persist (we'd sent `question_id`, ignored).
+- did:
+  • **Fixed the dashboard update bug:** `/api/update-prompt` required `question_id` (never exists) so it
+    always 404'd. Now it only needs the prompt `id`. (This is why your Update button failed.)
+  • connector `create_prompt` now writes `id` (not `question_id`).
+  • Added `probe_prompts.py --write-test <id> "<answer>"` — tries 4 endpoint/payload shapes on a KNOWN
+    prompt and re-reads after each to report which one actually PERSISTS. This auto-discovers the real
+    write path. Tests 24/24.
+- next (LAPTOP — two quick runs, paste results):
+  1. `python src/probe_prompts.py <token> --write-test pro_4 "TESTXYZ"` → tells us the working write
+     endpoint/payload (it temporarily changes pro_4's answer — set it back after). If one says
+     "✅ PERSISTED", we lock that in for create+update.
+  2. For the CATALOG (list of pro_X questions): open **tinder.com → Edit profile → add/replace a prompt**,
+     with **DevTools → Network** open. Capture (a) the request that loads the prompt question LIST and
+     (b) the request when you SAVE a prompt. Paste both URLs + payloads — that's the definitive source
+     for both the catalog and the write format.
+- blocked/notes: once the write path is confirmed + catalog captured, I'll finalize create, wire the UI,
+  then integrate AI (auto-pick prompt + write answer).
+
 ## 2026-06-03 (prompts) — desktop / Claude Code
 - why: The "Update prompt" button fails with "such prompts are not found" because the profile has
   ZERO prompts and the old `/api/update-prompt` can only EDIT existing prompts — it can't CREATE.
