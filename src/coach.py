@@ -82,13 +82,26 @@ low-pressure (or recommend not messaging)."""
 
 def _extract_json(text: str) -> str:
     """Pull the first top-level JSON object out of a model's (possibly chatty) reply."""
-    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    if fenced:
-        return fenced.group(1)
-    m = re.search(r"\{.*\}", text, re.DOTALL)  # greedy: first { to last }
-    if not m:
+    # Strip markdown code fences entirely
+    cleaned = re.sub(r"```(?:json)?\s*", "", text)
+    cleaned = re.sub(r"\s*```", "", cleaned)
+    # Find the outermost { ... } using brace counting
+    start = cleaned.find("{")
+    if start == -1:
         raise ValueError(f"No JSON object in model output:\n{text[:800]}")
-    return m.group(0)
+    depth = 0
+    for i, ch in enumerate(cleaned[start:], start):
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return cleaned[start:i + 1]
+    # Fallback: greedy regex
+    m = re.search(r"\{.*\}", cleaned, re.DOTALL)
+    if m:
+        return m.group(0)
+    raise ValueError(f"No JSON object in model output:\n{text[:800]}")
 
 
 def _parse(model_cls: Type[T], text: str) -> T:
