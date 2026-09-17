@@ -68,6 +68,95 @@ class GeminiLLM:
         raise RuntimeError(f"Gemini returned no candidates: {data}")
 
 
+class VertexLLM:
+    """Vertex AI (GCP) Gemini — uses the metadata server on Cloud Run or
+    gcloud CLI locally. No API key needed."""
+
+    def __init__(self, model: str, temperature: float, max_tokens: int):
+        self.project = os.environ.get("GCP_PROJECT", "")
+        self.region = os.environ.get("GCP_REGION", "us-central1")
+        self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self._token = None
+        self._token_exp = 0
+
+    def _get_token(self) -> str:
+        import time as _time
+        now = _time.time()
+        if self._token and now < self._token_exp:
+            return self._token
+        # Cloud Run / GCE: metadata server
+        try:
+            r = requests.get(
+                "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+                headers={"Metadata-Flavor": "Google"}, timeout=3)
+            if r.status_code == 200:
+                self._token = r.json()["access_token"]
+                self._token_exp = now + 45 * 60
+                return self._token
+        except requests.RequestException:
+            pass
+        # Local dev: gcloud CLI
+        import subprocess
+        out = subprocess.run(["gcloud", "auth", "print-access-token"],
+                             capture_output=True, text=True, timeout=30)
+        if out.returncode != 0:
+            raise RuntimeError(f"gcloud auth failed: {out.stderr[:200]}")
+        self._token = out.stdout.strip()
+        self._token_exp = now + 45 * 60
+        return self._token
+
+    def invoke(self, messages: list) -> Any:
+        import time as _time
+        system_messages = [m.content for m in messages if m.__class__.__name__ == "SystemMessage"]
+        other_messages = [m for m in messages if m.__class__.__name__ != "SystemMessage"]
+
+        system_instruction = {}
+        if system_messages:
+            system_instruction = {"system_instruction": {"parts": [{"text": "\n".join(system_messages)}]}}
+
+        contents = []
+        for msg in other_messages:
+            role = "model" if msg.__class__.__name__ == "AIMessage" else "user"
+            contents.append({"role": role, "parts": [{"text": msg.content}]})
+
+        url = (f"https://{self.region}-aiplatform.googleapis.com/v1/projects/"
+               f"{self.project}/locations/{self.region}/publishers/google/"
+               f"models/{self.model}:generateContent")
+        payload = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": self.temperature,
+                "maxOutputTokens": self.max_tokens,
+            },
+            **system_instruction,
+        }
+
+        for attempt in range(4):
+            token = self._get_token()
+            res = requests.post(url, json=payload,
+                               headers={"Authorization": f"Bearer {token}"},
+                               timeout=60)
+            if res.status_code == 429:
+                wait = int(res.headers.get("Retry-After", 20)) + attempt * 5
+                print(f"[vertex] 429; backing off {wait}s")
+                _time.sleep(wait)
+                continue
+            break
+        res.raise_for_status()
+        data = res.json()
+
+        candidates = data.get("candidates", [])
+        if candidates:
+            text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            class MockResponse:
+                def __init__(self, content):
+                    self.content = content
+            return MockResponse(text)
+        raise RuntimeError(f"Vertex AI returned no candidates: {data}")
+
+
 @dataclass
 class LLM:
     _impl: Any           # a LangChain chat model or GeminiLLM
@@ -106,6 +195,13 @@ def make_llm() -> LLM:
         model = os.getenv("OLLAMA_MODEL", "llama3.1")
         impl = ChatOllama(model=model, temperature=temperature, num_predict=max_tokens)
         return LLM(_impl=impl, name=f"ollama:{model}")
+
+    if backend == "vertex":
+        if not os.environ.get("GCP_PROJECT"):
+            raise RuntimeError("LLM_BACKEND=vertex but GCP_PROJECT is not set")
+        model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        impl = VertexLLM(model=model, temperature=temperature, max_tokens=max_tokens)
+        return LLM(_impl=impl, name=f"vertex:{model}")
 
     if backend == "gemini":
         token = os.environ.get("GEMINI_API_KEY")

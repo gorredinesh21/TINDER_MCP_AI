@@ -42,7 +42,7 @@ _coach: DatingCoach | None = None
 def get_coach() -> DatingCoach:
     """Build the brain once, lazily, and rebuild dynamically if backend preference changes."""
     global _coach
-    backend = os.getenv("LLM_BACKEND", "ollama").lower()
+    backend = os.getenv("LLM_BACKEND", "vertex").lower()
     if _coach is not None:
         active_llm_name = _coach.llm.name.lower()
         if not active_llm_name.startswith(backend):
@@ -142,7 +142,7 @@ def setup(model: str | None = None) -> StreamingResponse:
 
 @app.get("/api/health")
 def health() -> dict:
-    backend = os.getenv("LLM_BACKEND", "ollama").lower()
+    backend = os.getenv("LLM_BACKEND", "vertex").lower()
     model = os.getenv("HF_MODEL") if backend == "hf" else (os.getenv("GEMINI_MODEL", "gemini-2.5-flash") if backend == "gemini" else os.getenv("OLLAMA_MODEL", "llama3.1"))
     
     if backend == "hf":
@@ -178,7 +178,7 @@ def config(req: ConfigRequest) -> dict:
         if token:
             updates["HUGGINGFACEHUB_API_TOKEN"] = token
             if req.brain_backend is None:
-                updates["LLM_BACKEND"] = "hf"
+                updates["LLM_BACKEND"] = os.getenv("LLM_BACKEND", "vertex")
             if not os.getenv("HF_MODEL"):
                 updates["HF_MODEL"] = "Qwen/Qwen2.5-72B-Instruct"
 

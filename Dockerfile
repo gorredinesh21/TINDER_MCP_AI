@@ -4,5 +4,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 ENV PORT=8080
+ENV LLM_BACKEND=vertex
+ENV GCP_PROJECT=personal-project-dg21
+ENV GCP_REGION=us-central1
 ENV HOST=0.0.0.0
 CMD exec python -c "import uvicorn; import app; uvicorn.run(app.app, host='0.0.0.0', port=int(__import__('os').environ.get('PORT','8080')), log_level='warning')"
