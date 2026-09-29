@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Connect Tinder — Wingman AI guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css" />
+<style>
+  .guide-step { display:grid; grid-template-columns: 44px 1fr; gap: 0 18px; margin-bottom: 8px; }
+  .guide-step .rail { display:flex; flex-direction:column; align-items:center; }
+  .guide-step .rail .num { width:40px; height:40px; border-radius:13px; background:var(--flame); color:#fff; font:700 17px/40px var(--display); text-align:center; box-shadow:0 8px 20px rgba(253,38,125,.3); }
+  .guide-step .rail .line { flex:1; width:3px; background:linear-gradient(var(--line-strong), transparent); margin:6px 0; border-radius:2px; }
+  .guide-step:last-of-type .rail .line { display:none; }
+  .guide-step .content { padding-bottom: 34px; min-width: 0; }
+  .duo { display:grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; margin-top: 16px; }
+  @media (max-width: 860px) { .duo { grid-template-columns: 1fr; } }
+  .copybox { display:flex; gap:10px; align-items:center; background:#241318; color:#FFD9E4; border-radius:13px; padding:13px 16px; font-family: ui-monospace, monospace; font-size: 13.5px; margin-top:12px; }
+  .copybox span { flex:1; overflow-x:auto; white-space:nowrap; }
+  .copybox button { background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:9px; padding:7px 14px; font:600 13px var(--font); cursor:pointer; }
+  .copybox button:hover { background:rgba(255,255,255,.24); }
+</style>
+</head>
+<body>
+<div class="bg-blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/"><span class="mark">🔥</span> Wingman&nbsp;AI</a>
+    <div class="nav-links">
+      <a href="/" class="hide-m">Home</a>
+      <a href="/docs">Docs</a>
+      <a class="btn small" href="/app">Open App</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap-narrow" style="padding-top: 56px;">
+  <span class="chip">⏱️ About 2 minutes</span>
+  <h1 style="margin-top:18px; font-size: clamp(30px, 4.5vw, 46px);">Connect your Tinder in <span class="gtext">5 easy steps</span></h1>
+  <p class="muted" style="font-size:17px;">
+    Wingman needs the same login credential your browser uses for Tinder. You'll copy it once and paste it into the app.
+    No installs, nothing technical to configure — just follow along.
+  </p>
+
+  <div class="card" style="background:var(--pink-soft); border-color:rgba(253,38,125,.18); margin: 26px 0 40px;">
+    <strong>🧠 What is this token, really?</strong>
+    <p class="muted" style="margin:8px 0 0;">
+      When you log into Tinder on the web, Tinder gives your browser a 36-character login code so you stay signed in.
+      It's the key to <strong>your</strong> account — so Wingman treats it like a password:
+      you paste it into the app yourself, it stays in memory only, and <strong>you should never share it with anyone</strong>.
+    </p>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="guide-step">
+    <div class="rail"><div class="num">1</div><div class="line"></div></div>
+    <div class="content">
+      <h3>Open Tinder in your browser and log in</h3>
+      <p class="muted">Go to <a href="https://tinder.com/app" target="_blank" rel="noopener">tinder.com/app</a> and sign in the way you normally do (Google, phone number, or email). You must be fully logged in — you should see your swipe deck.</p>
+      <div class="mock">
+        <div class="bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><div class="url">tinder.com/app — you're logged in ✓</div></div>
+        <div class="body center">
+          <div style="font-size:44px; margin:6px 0;">🔥</div>
+          <div class="row-line" style="width:40%; margin: 12px auto;"></div>
+          <div class="row-line" style="width:60%; margin: 0 auto;"></div>
+          <div class="muted small" style="margin-top:12px;">Your swipe deck = you're logged in</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="guide-step">
+    <div class="rail"><div class="num">2</div><div class="line"></div></div>
+    <div class="content">
+      <h3>Open the browser's inspection tools</h3>
+      <p class="muted">Right-click <em>anywhere</em> on the Tinder page and choose <strong>Inspect</strong>. A panel opens — that's your browser's toolbox for developers. It works in Chrome, Edge, and Firefox.</p>
+      <div class="duo">
+        <div class="mock">
+          <div class="bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><div class="url">tinder.com/app</div></div>
+          <div class="body">
+            <div class="row-line" style="width:70%"></div>
+            <div class="row-line" style="width:52%"></div>
+            <div style="background:#fff; border:1px solid var(--line-strong); border-radius:10px; padding:10px 14px; box-shadow:0 10px 26px rgba(0,0,0,.14); width: 150px; margin-top:10px; font-size:12.5px;">
+              <div>← Back</div><div style="padding:5px 0;">🔄 Reload</div><div class="hl" style="padding:6px 10px; margin:0;">🔍 Inspect</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="small" style="margin-top:0;">💡 <strong>Shortcut:</strong> press <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">I</span> (Windows/Linux) or <span class="kbd">⌘</span> + <span class="kbd">Option</span> + <span class="kbd">I</span> (Mac).</p>
+          <p class="small muted">If the panel opens on the side, you can drag it to the bottom — whatever feels comfortable. Nothing here can break anything; it's a viewing tool.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="guide-step">
+    <div class="rail"><div class="num">3</div><div class="line"></div></div>
+    <div class="content">
+      <h3>Find “Application” → “Local Storage”</h3>
+      <p class="muted">At the top of the inspector there's a row of tabs. Click <strong>Application</strong> (in Firefox: <strong>Storage</strong>). If you don't see it, click the <strong>≫</strong> button — hidden tabs live there.</p>
+      <div class="mock">
+        <div class="bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><div class="url">DevTools</div></div>
+        <div class="body" style="padding:0;">
+          <div style="display:flex; border-bottom:1px solid var(--line); font-size:12.5px; font-weight:600; color:var(--muted);">
+            <div style="padding:9px 16px;">Elements</div><div style="padding:9px 16px;">Console</div>
+            <div style="padding:9px 16px; color:var(--accent); border-bottom:2.5px solid var(--accent);">Application</div>
+            <div style="padding:9px 16px;">Network</div><div style="padding:9px 16px;">≫</div>
+          </div>
+          <div style="display:flex; font-size:12.5px; min-height:120px;">
+            <div style="border-right:1px solid var(--line); padding:12px; width:170px; color:var(--muted);">
+              <div class="hl" style="padding:5px 10px; margin-bottom:4px;">▸ Local Storage</div>
+              <div style="padding-left:16px; color:var(--ink); font-weight:600;">&nbsp;https://tinder.com</div>
+              <div style="padding:4px 0 0 8px;">▸ Session Storage</div>
+              <div style="padding:4px 0 0 8px;">▸ Cookies</div>
+            </div>
+            <div style="flex:1; padding:12px;">
+              <div class="lbl">Key</div>
+              <div style="border:1px solid var(--line); border-radius:9px; overflow:hidden; font-family:ui-monospace,monospace; font-size:12px;">
+                <div style="padding:7px 12px; border-bottom:1px solid var(--line);">TinderWeb/ConfigService</div>
+                <div style="padding:7px 12px; border-bottom:1px solid var(--line);">TinderWeb/uuid</div>
+                <div class="hl" style="border-radius:0; border-left:3px solid var(--accent); padding:7px 12px;">TinderWeb/APIToken &nbsp;← this one</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="small muted" style="margin-top:12px;">Under <strong>Local Storage → https://tinder.com</strong> you'll see a small table of rows. You're looking for the row named exactly <code>TinderWeb/APIToken</code>.</p>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="guide-step">
+    <div class="rail"><div class="num">4</div><div class="line"></div></div>
+    <div class="content">
+      <h3>Copy the token value</h3>
+      <p class="muted">Click the <strong>value</strong> on the <code>TinderWeb/APIToken</code> row (the long code on the right, not the name). It's 36 characters with dashes, like:</p>
+      <div class="copybox"><span id="sampleTok">bff5d171-23a4-4c8e-9f2a-6d1b0c7e4a58</span><button type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText('bff5d171-23a4-4c8e-9f2a-6d1b0c7e4a58');this.textContent='Copied ✓'">Copy</button></div>
+      <p class="small muted" style="margin-top:10px;">Double-click the value to select all of it, then <span class="kbd">Ctrl</span>+<span class="kbd">C</span> (or <span class="kbd">⌘</span>+<span class="kbd">C</span>). Copy the <strong>whole</strong> thing — all 36 characters.</p>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="guide-step">
+    <div class="rail"><div class="num">5</div><div class="line"></div></div>
+    <div class="content">
+      <h3>Paste it into Wingman</h3>
+      <p class="muted">Open the Wingman app, paste the code into the <strong>Connect</strong> box, and press <strong>Connect</strong>. You should see a green “Connected as &lt;your name&gt;” — that's it, you're in. 🎉</p>
+      <div class="center" style="margin-top:18px;">
+        <a class="btn" href="/app">Open the app & paste it →</a>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" style="margin:44px 0;"/>
+
+  <h2 style="font-size:26px;">Good to know</h2>
+  <details class="faq"><summary>How long does the token stay valid?</summary>
+    <p>From our live testing: the token stayed valid across hours of use and multiple page refreshes. It's invalidated by logging out of Tinder on the web, and Tinder may rotate it eventually. Wingman tells you clearly when it stops working — just come back and copy a fresh one (same 5 steps).</p></details>
+  <details class="faq"><summary>Is this safe? What does Wingman do with it?</summary>
+    <p>The token goes from your paste to the app's memory — it is never saved to a file or database, never logged, never shown in full again (only a masked fingerprint like <code>bff5…9f31</code>), and never sent anywhere except Tinder's own API. Press <strong>Disconnect</strong> and it's gone instantly.</p></details>
+  <details class="faq"><summary>I can't find the TinderWeb/APIToken row</summary>
+    <p>Make sure you're on <code>tinder.com/app</code> and actually logged in, then refresh the page and re-open Local Storage. In Firefox the path is Storage → Local Storage. If you see other <code>TinderWeb/…</code> rows but not <code>APIToken</code>, you're not logged in — log in first.</p></details>
+  <details class="faq"><summary>Wingman says the token is invalid or expired</summary>
+    <p>Most likely Tinder ended the session (this happens after logging out or long gaps). Log into tinder.com again and copy a fresh token — steps 1–5, two minutes.</p></details>
+  <details class="faq"><summary>Can someone else use my token?</summary>
+    <p>Yes — that's why it must be treated like a password. Anyone holding it can use your account, so never paste it into sites you don't trust or send it to anyone. Wingman runs locally on your machine, so the token stays with you.</p></details>
+
+  <div class="center" style="margin: 44px 0 70px;">
+    <a class="btn" href="/app">I'm ready — open the app →</a>
+    <div class="muted small" style="margin-top:10px;">Just exploring? <a href="/app">Try demo mode</a> with sample data instead.</div>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="wrap footer-row">
+    <a class="brand" href="/"><span class="mark">🔥</span> Wingman&nbsp;AI</a>
+    <div class="links"><a href="/">Home</a><a href="/docs">Docs</a><a href="/app">Open App</a></div>
+    <div class="muted small">An independent AI assistant · not affiliated with Tinder</div>
+  </div>
+</footer>
+</body>
+</html>

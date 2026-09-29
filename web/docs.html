@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Docs — Wingman AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css" />
+<style>
+  .docs-layout { display: grid; grid-template-columns: 210px 1fr; gap: 44px; align-items: start; padding: 50px 0 90px; }
+  @media (max-width: 860px) { .docs-layout { grid-template-columns: 1fr; } .docs-nav { display:none; } }
+  .docs-nav { position: sticky; top: 90px; display:flex; flex-direction:column; gap:4px; }
+  .docs-nav a { color: var(--muted); font-weight:600; font-size:14px; padding:7px 12px; border-radius:10px; }
+  .docs-nav a:hover { background:var(--bg-2); color:var(--ink); text-decoration:none; }
+  .docs-body h2 { margin-top: 54px; font-size: 27px; scroll-margin-top: 90px; }
+  .docs-body h2:first-child { margin-top: 0; }
+  .docs-body h3 { margin-top: 30px; scroll-margin-top: 90px; }
+  .arch { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; font-family:ui-monospace,monospace; font-size:13px; line-height:1.9; overflow-x:auto; white-space:pre; color:var(--ink-2); }
+  .status { display:inline-block; font-size:12px; font-weight:700; border-radius:999px; padding:3px 11px; }
+  .status.on { background:var(--good-soft); color:var(--good); }
+  .status.off { background:var(--bad-soft); color:var(--bad); }
+  .status.part { background:var(--warn-soft); color:var(--warn); }
+</style>
+</head>
+<body>
+<div class="bg-blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/"><span class="mark">🔥</span> Wingman&nbsp;AI</a>
+    <div class="nav-links">
+      <a href="/" class="hide-m">Home</a>
+      <a href="/guide" class="hide-m">Connect guide</a>
+      <a class="btn small" href="/app">Open App</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap docs-layout">
+  <div class="docs-nav">
+    <a href="#getting-started">Getting started</a>
+    <a href="#using">Using Wingman</a>
+    <a href="#capabilities">What it can do</a>
+    <a href="#technical">Technical</a>
+    <a href="#security">Security</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#faq">FAQ</a>
+  </div>
+
+  <div class="docs-body">
+    <h1 style="font-size:38px;">Documentation</h1>
+    <p class="muted" style="font-size:16.5px;">Everything about Wingman AI — for users and for engineers. Written in plain language first, details where they belong.</p>
+
+    <h2 id="getting-started">Getting started</h2>
+    <h3>What is Wingman AI?</h3>
+    <p>An AI assistant for your own Tinder account. It reads your profile and conversations with Google's Gemini models, gives you honest feedback, rewrites bios and prompts, drafts replies in your chosen tone — and never takes an action without your explicit approval.</p>
+    <h3>Quick start (2 minutes)</h3>
+    <div class="card">
+      <div class="step-row" style="margin-bottom:12px;"><div class="step-num">1</div><div>Run the app locally and open <code>http://127.0.0.1:8000</code> (or use the hosted <strong>demo</strong> — no connection needed).</div></div>
+      <div class="step-row" style="margin-bottom:12px;"><div class="step-num">2</div><div>Get your token from tinder.com — the <a href="/guide">visual guide</a> shows every click.</div></div>
+      <div class="step-row" style="margin-bottom:12px;"><div class="step-num">3</div><div>Paste it into <strong>Connect</strong>. You'll see “Connected as …” within seconds.</div></div>
+      <div class="step-row"><div class="step-num">4</div><div>Open <strong>Profile → Analyze</strong>. That's the whole onboarding.</div></div>
+    </div>
+    <h3>Connecting Tinder &amp; authentication</h3>
+    <p>Wingman uses the same login credential your browser holds for tinder.com (a 36-character token). You copy it yourself and paste it into the app — Wingman never asks for your password, never uses OAuth screens, and never needs your phone number. Full details in the <a href="/guide">Connect guide</a>.</p>
+
+    <h2 id="using">Using Wingman</h2>
+    <h3>Profile analysis</h3>
+    <p>Open <strong>Profile → Analyze with AI</strong>. Gemini scores your bio, prompts, and photos, explains the reasoning, and produces: 2–3 rewritten bios in different tones, sharper versions of your prompt answers, per-photo feedback with a recommended order, and a list of gaps (like “no full-body shot”).</p>
+    <h3>Conversation analysis &amp; replies</h3>
+    <p>Open <strong>Conversations</strong> and pick a chat. Choose a tone (casual / funny / flirty / confident / balanced) and press <strong>Analyze</strong>. You get a read on tone and engagement, topics worth pulling on, issues (interview-mode, fading), a concrete next move, and three drafts you can edit inline.</p>
+    <h3>Messaging — review then send</h3>
+    <p>Every message is a two-step action: <strong>AI drafts → you edit → you press Send → you confirm</strong>. There is no auto-send path in the product; the AI layer physically cannot send (see architecture below). The demo instance shows the full flow with sending disabled.</p>
+    <h3>Match management &amp; insights</h3>
+    <p>The Conversations list flags chats waiting on you and new matches you haven't messaged. Insights computes totals, response balance, and shared-interest overlaps from your real history.</p>
+
+    <h2 id="capabilities">What it can actually do — honest status</h2>
+    <p>We verify every capability live before enabling it, and we say exactly what's verified and what isn't (full research log in <code>docs/research-findings.md</code> on GitHub).</p>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-size:14.5px;">
+        <tr style="background:var(--bg-2);"><th style="text-align:left; padding:13px 20px;">Capability</th><th style="text-align:left; padding:13px 20px;">Status</th><th style="text-align:left; padding:13px 20px;">Note</th></tr>
+        <tr><td style="padding:12px 20px; border-top:1px solid var(--line);">Read your profile</td><td style="border-top:1px solid var(--line);"><span class="status on">Verified live</span></td><td style="border-top:1px solid var(--line);" class="muted">bio, prompts, photos, interests, descriptors</td></tr>
+        <tr><td style="padding:12px 20px; border-top:1px solid var(--line);">AI analysis (text)</td><td style="border-top:1px solid var(--line);"><span class="status on">Verified live</span></td><td style="border-top:1px solid var(--line);" class="muted">Gemini on Vertex AI</td></tr>
+        <tr><td style="padding:12px 20px; border-top:1px solid var(--line);">AI photo vision</td><td style="border-top:1px solid var(--line);"><span class="status on">Verified live</span></td><td style="border-top:1px solid var(--line);" class="muted">per-photo visual feedback</td></tr>
+        <tr><td style="padding:12px 20px; border-top:1px solid var(--line);">Update bio / prompts</td><td style="border-top:1px solid var(--line);"><span class="status on">Verified live</span></td><td style="border-top:1px solid var(--line);" class="muted">explicit confirmation required</td></tr>
+        <tr><td style="padding:12px 20px; border-top:1px solid var(--line);">Read matches &amp; messages</td><td style="border-top:1px solid var(--line);"><span class="status part">Blocked on new accounts</span></td><td style="border-top:1px solid var(--line);" class="muted">works on verified accounts; Tinder gates fresh accounts behind selfie review</td></tr>
+        <tr><td style="padding:12px 20px; border-top:1px solid var(--line);">Send messages</td><td style="border-top:1px solid var(--line);"><span class="status part">Implemented, gated</span></td><td style="border-top:1px solid var(--line);" class="muted">review-then-send only; unlocks with match access</td></tr>
+        <tr><td style="padding:12px 20px; border-top:1px solid var(--line);">Right / left swipe</td><td style="border-top:1px solid var(--line);"><span class="status off">Not enabled</span></td><td style="border-top:1px solid var(--line);" class="muted">under research — not exposed until verified safe &amp; reliable</td></tr>
+      </table>
+    </div>
+
+    <h2 id="technical">Technical</h2>
+    <h3>Architecture</h3>
+    <div class="arch">User
+  ↓
+Frontend  (vanilla JS + CSS — web/)
+  ↓  JSON over HTTP
+Backend   (FastAPI — app.py, server/)
+  ├── routes.py      API surface + session handling
+  ├── session.py     token in memory only, HttpOnly cookie, 2h idle TTL
+  ├── errors.py      every failure → friendly message (no stack traces to users)
+  ├── tinder_api.py  the ONLY module that talks to Tinder
+  ├── coach.py       AI orchestration (prompts, validation, no network rights)
+  └── gemini.py      the ONLY module that talks to Google Cloud
+  ↓                        ↓
+Tinder API            Vertex AI (Gemini)
+(reads + gated writes)  (text + photo vision)</div>
+    <h3>MCP architecture</h3>
+    <p>Wingman grew out of an MCP (Model Context Protocol) prototype: the Tinder tools were originally exposed as MCP tools for an LLM client. In this product the same clean tool boundary remains — <code>tinder_api.py</code> is a set of well-named capabilities with explicit confirmation parameters — but MCP is now an implementation detail. Users never see servers, transports, or tool schemas; they see a dashboard.</p>
+    <h3>AI / LLM architecture</h3>
+    <p>One AI provider: <strong>Google Cloud Gemini</strong> via Vertex AI (model selectable with <code>GEMINI_MODEL</code>). Authentication uses GCP application credentials — on Cloud Run the built-in service account, locally your <code>gcloud</code> login. An AI Studio API key (<code>GEMINI_API_KEY</code>) is supported as a fallback for machines without gcloud. All model output is validated against Pydantic schemas before it reaches the UI.</p>
+    <h3>Authentication architecture</h3>
+    <p>Token → in-memory session (never persisted) → HttpOnly cookie referencing the session. Disconnect deletes it; 2h idle expiry; masked fingerprint display. Live mode is localhost-only — the deployed demo instance refuses live connections because datacenter IPs get accounts flagged.</p>
+
+    <h2 id="security">Security</h2>
+    <ul style="line-height:2;">
+      <li>Token is stored <strong>only</strong> in process memory; never in files, DBs, logs, or analytics</li>
+      <li>Tokens are scrubbed from all error messages and logs</li>
+      <li>All writes require <code>confirm: true</code> from an explicit user action</li>
+      <li>The AI module cannot import the Tinder layer — it can draft, never act</li>
+      <li><code>.env</code> is gitignored; no credentials are committed</li>
+      <li>Disconnect drops access instantly; Tinder logout invalidates the token everywhere</li>
+    </ul>
+
+    <h2 id="troubleshooting">Troubleshooting</h2>
+    <details class="faq"><summary>“That doesn't look like a Tinder token”</summary><p>You likely copied the row name instead of the value, or missed characters. The full value is 36 characters including dashes. Re-copy with double-click + Ctrl/⌘+C — see <a href="/guide">the guide</a>.</p></details>
+    <details class="faq"><summary>“Your Tinder connection has expired”</summary><p>The token stopped working (Tinder ended the session — normal after logout or long gaps). Log into tinder.com again and paste a fresh token.</p></details>
+    <details class="faq"><summary>“Tinder has your account in a verification state”</summary><p>New accounts sit behind a selfie/photo review. Complete it in the Tinder mobile app; profile tools keep working meanwhile, match tools unlock after review.</p></details>
+    <details class="faq"><summary>“Tinder is asking us to slow down”</summary><p>Rate limit hit — wait a minute. Wingman already throttles to one Tinder call at a time.</p></details>
+    <details class="faq"><summary>“The AI service is busy”</summary><p>Gemini hiccup. Retry — the app automatically backs off and retries transient model errors once.</p></details>
+    <details class="faq"><summary>Live connection refused on the hosted demo</summary><p>By design. The public instance is demo-only; run Wingman locally for live access (protects your account from datacenter-IP flags).</p></details>
+
+    <h2 id="faq">FAQ</h2>
+    <details class="faq"><summary>Is this affiliated with Tinder?</summary><p>No. Wingman is an independent personal-assistant project that works with your own account, and encourages use within Tinder's terms.</p></details>
+    <details class="faq"><summary>Does the AI learn from my data?</summary><p>Your profile/conversation JSON is sent to Gemini per request to produce the analysis. Nothing is stored by Wingman beyond your session.</p></details>
+    <details class="faq"><summary>Can I self-host?</summary><p>Yes — it's on GitHub. Clone, <code>pip install -r requirements.txt</code>, <code>python app.py</code>. You'll need gcloud logged in (or a Gemini API key) for the AI.</p></details>
+    <details class="faq"><summary>Why is swiping not available?</summary><p>We only enable verified capabilities. Swipe endpoints are documented and implemented but not exposed until reliability and account-safety checks pass. Check the research log for the current status.</p></details>
+
+    <div class="center" style="margin-top:50px;">
+      <a class="btn" href="/app">Open the app →</a>
+    </div>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="wrap footer-row">
+    <a class="brand" href="/"><span class="mark">🔥</span> Wingman&nbsp;AI</a>
+    <div class="links"><a href="/">Home</a><a href="/guide">Connect guide</a><a href="/app">Open App</a><a href="https://github.com/gorredinesh21/TINDER_MCP_AI">GitHub</a></div>
+    <div class="muted small">An independent AI assistant · not affiliated with Tinder</div>
+  </div>
+</footer>
+</body>
+</html>

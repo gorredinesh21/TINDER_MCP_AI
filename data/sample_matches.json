@@ -1,0 +1,44 @@
+[
+  {
+    "match_id": "sample-match-1",
+    "name": "Ananya",
+    "age": 23,
+    "bio": "Architect by day, filter coffee scientist by night. Will judge you by your playlist.",
+    "interests": ["Coffee", "Architecture", "Indie music", "Travel"],
+    "photos": [{"id": "p1", "url": null}],
+    "verified": true,
+    "conversation": [
+      {"sender": "them", "text": "Okay your bio says you'll argue about momos — Indiranagar or Nagarjuna?", "ts": "2026-09-27T10:04:00Z"},
+      {"sender": "me", "text": "Nagarjuna is a myth perpetuated by Andhra people. Indiranagar cart, 8pm, no reservations", "ts": "2026-09-27T10:31:00Z"},
+      {"sender": "them", "text": "Bold. I've been to that cart 40 times", "ts": "2026-09-27T10:33:00Z"},
+      {"sender": "them", "text": "but go on, you said you lift. what's your split", "ts": "2026-09-27T18:02:00Z"}
+    ],
+    "is_new": false
+  },
+  {
+    "match_id": "sample-match-2",
+    "name": "Priya",
+    "age": 25,
+    "bio": "Product manager. Dog aunt to 3. Weekend trekker, weeknight reader.",
+    "interests": ["Trekking", "Books", "Dogs", "Baking"],
+    "photos": [{"id": "p1", "url": null}],
+    "verified": false,
+    "conversation": [
+      {"sender": "me", "text": "3 dogs and a PM job — when do you sleep 😄", "ts": "2026-09-25T09:12:00Z"},
+      {"sender": "them", "text": "I don't, that's the brand", "ts": "2026-09-25T09:40:00Z"},
+      {"sender": "me", "text": "haha fair. what are you reading lately?", "ts": "2026-09-25T11:02:00Z"}
+    ],
+    "is_new": false
+  },
+  {
+    "match_id": "sample-match-3",
+    "name": "Meghana",
+    "age": 22,
+    "bio": "Final-year med student. Surviving on notes and filter coffee.",
+    "interests": ["Medicine", "Coffee", "Bollywood", "Badminton"],
+    "photos": [{"id": "p1", "url": null}],
+    "verified": false,
+    "conversation": [],
+    "is_new": true
+  }
+]

@@ -3,953 +3,216 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tinder AI Coach</title>
+<title>Wingman AI — Your Tinder. Smarter.</title>
+<meta name="description" content="AI-powered Tinder profile analysis, conversation coaching, and reply drafting. Your account, your control." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  @property --v { syntax:'<number>'; inherits:false; initial-value:0; }
-  :root{
-    --bg:#0a0810; --ink:#fdeef0; --muted:#b39aa3; --line:rgba(255,120,140,.14);
-    --glass:rgba(30,18,26,.55); --glass2:rgba(40,22,32,.5);
-    --flame:linear-gradient(115deg,#fd297b 0%,#ff4d5e 45%,#ff8c42 100%);
-    --good:#2fe6a0; --warn:#ffc24b; --bad:#ff5a6e; --radius:18px;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{margin:0;background:#0a0810;color:var(--ink);overflow-x:hidden;
-    font:15px/1.6 "Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-  h1,h2,.brand,.name,.btn,.ring i,.chip,.tag{font-family:"Space Grotesk","Plus Jakarta Sans",sans-serif}
-  .toggle{display:inline-flex;align-items:center;gap:9px;margin-top:14px;font-size:13.5px;color:var(--muted);cursor:pointer;user-select:none}
-  .toggle input{appearance:none;-webkit-appearance:none;width:42px;height:24px;min-width:42px;border-radius:999px;
-    background:rgba(255,255,255,.12);border:1px solid var(--line);position:relative;cursor:pointer;transition:.25s;flex:0 0 auto}
-  .toggle input::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.25s}
-  .toggle input:checked{background:var(--flame);border-color:transparent}
-  .toggle input:checked::after{left:20px}
-  .status{font-size:12.5px;margin-top:12px;display:flex;align-items:center;gap:8px}
-  .status .led{width:9px;height:9px;border-radius:50%;background:#6b5560;box-shadow:0 0 0 3px rgba(255,255,255,.04)}
-  .status.on .led{background:var(--good);box-shadow:0 0 10px var(--good)}
-  .step{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--flame);
-    color:#fff;font-weight:800;font-size:13px;margin-right:9px;vertical-align:middle;font-family:"Space Grotesk"}
-  /* living background */
-  .bg{position:fixed;inset:0;z-index:-2;overflow:hidden;background:#0a0810}
-  .blob{position:absolute;width:55vw;height:55vw;border-radius:50%;filter:blur(90px);opacity:.55;
-    background:radial-gradient(circle at 30% 30%,#fd297b,transparent 60%);animation:float 18s ease-in-out infinite}
-  .blob.b2{right:-10vw;top:-10vw;background:radial-gradient(circle at 30% 30%,#ff5864,transparent 60%);animation-delay:-6s}
-  .blob.b3{left:-10vw;bottom:-15vw;background:radial-gradient(circle at 30% 30%,#ff8c42,transparent 60%);animation-delay:-12s}
-  .grain{position:fixed;inset:0;z-index:-1;opacity:.04;pointer-events:none;
-    background-image:radial-gradient(#fff 1px,transparent 1px);background-size:3px 3px}
-  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(6vw,4vh) scale(1.1)}66%{transform:translate(-5vw,-3vh) scale(.95)}}
-
-  .wrap{max-width:940px;margin:0 auto;padding:30px 20px 90px}
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px}
-  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:.3px}
-  .flame{width:34px;height:34px;border-radius:11px;background:var(--flame);display:grid;place-items:center;font-size:18px;
-    box-shadow:0 6px 20px rgba(253,41,123,.45);animation:pulse 2.4s ease-in-out infinite}
-  @keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 6px 20px rgba(253,41,123,.45)}50%{transform:scale(1.08);box-shadow:0 8px 32px rgba(255,88,100,.7)}}
-  .gtext{background:var(--flame);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:shift 5s linear infinite}
-  @keyframes shift{to{background-position:200% center}}
-  .badge{font-size:12px;color:var(--muted);background:var(--glass);border:1px solid var(--line);
-    padding:7px 12px;border-radius:999px;white-space:nowrap;backdrop-filter:blur(10px)}
-
-  .card{background:var(--glass);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin:16px 0;
-    backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(255,255,255,.04),0 20px 50px rgba(0,0,0,.35);
-    transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s,border-color .3s}
-  .card:hover{transform:translateY(-3px);border-color:rgba(255,120,140,.3);box-shadow:0 28px 70px rgba(253,41,123,.18)}
-  h1{font-size:30px;line-height:1.15;margin:0 0 8px;font-weight:800;letter-spacing:-.5px}
-  h2{font-size:13px;text-transform:uppercase;letter-spacing:.16em;color:#ff7a8c;margin:0 0 16px;font-weight:700}
-  .sub{color:var(--muted);margin:0 0 20px}
-  .row{display:flex;gap:11px;flex-wrap:wrap}
-  input,select{flex:1;min-width:220px;background:var(--glass2);border:1px solid var(--line);color:var(--ink);
-    border-radius:13px;padding:14px 15px;font-size:15px;outline:none;transition:.25s}
-  input:focus,select:focus{border-color:#ff5864;box-shadow:0 0 0 4px rgba(255,88,100,.18)}
-  input::placeholder{color:#8a7079}
-  button{cursor:pointer;border:0;border-radius:13px;padding:14px 22px;font-size:15px;font-weight:700;transition:.22s;position:relative;overflow:hidden}
-  .btn{background:var(--flame);background-size:160% auto;color:#fff;box-shadow:0 8px 24px rgba(253,41,123,.4)}
-  .btn:hover{background-position:right center;transform:translateY(-2px) scale(1.02);box-shadow:0 12px 34px rgba(255,88,100,.6)}
-  .btn:active{transform:translateY(0) scale(.99)}
-  .btn::after{content:"";position:absolute;top:0;left:-120%;width:60%;height:100%;
-    background:linear-gradient(120deg,transparent,rgba(255,255,255,.35),transparent);transition:.5s}
-  .btn:hover::after{left:130%}
-  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);box-shadow:none}
-  .btn.ghost:hover{border-color:#ff5864;background:rgba(255,88,100,.08);transform:translateY(-2px)}
-  .note{font-size:12.5px;color:var(--muted);margin-top:14px}
-  code{background:rgba(255,120,140,.12);padding:2px 6px;border-radius:6px;font-size:12.5px}
-  details{margin-top:14px;font-size:13.5px;color:var(--muted)}
-  details summary{cursor:pointer;color:var(--ink);font-weight:600}
-  details ol{margin:8px 0 0;padding-left:18px} details li{margin:4px 0}
-  .hidden{display:none}
-
-  .load{display:flex;align-items:center;gap:16px}
-  .spin{width:26px;height:26px;border:3px solid rgba(255,120,140,.2);border-top-color:#ff5864;border-radius:50%;animation:spin .9s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .err{border-color:rgba(255,90,110,.5);background:rgba(50,16,24,.6)}
-
-  /* score rings */
-  .scores{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  .score{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 6px}
-  .ring{--v:0;--c:var(--good);width:122px;height:122px;border-radius:50%;display:grid;place-items:center;
-    background:conic-gradient(var(--c) calc(var(--v)*1%),rgba(255,255,255,.06) 0);transition:--v 1.1s cubic-bezier(.2,.8,.2,1);
-    filter:drop-shadow(0 0 12px color-mix(in srgb,var(--c) 45%,transparent))}
-  .ring i{width:94px;height:94px;border-radius:50%;background:#140b12;display:grid;place-items:center;
-    font-style:normal;font-weight:800;font-size:28px}
-  .score span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:600}
-
-  .phead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .phead .name{font-size:24px;font-weight:800}
-  .pill{font-size:12px;padding:5px 12px;border-radius:999px;background:var(--glass2);border:1px solid var(--line);color:var(--muted)}
-  .pill.ok{color:#06231a;background:var(--good);border-color:transparent;font-weight:800}
-
-  .hl{border:1px solid rgba(255,120,140,.35);background:linear-gradient(160deg,rgba(60,20,40,.6),rgba(30,16,24,.5))}
-  .biotext{font-size:18px;line-height:1.55;margin:6px 0 14px}
-  .stack{display:grid;gap:13px}
-  .item{background:var(--glass2);border:1px solid var(--line);border-radius:14px;padding:16px;transition:.25s}
-  .item:hover{transform:translateX(4px);border-color:rgba(255,120,140,.32);box-shadow:-4px 0 0 #ff5864}
-  .chip{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
-    padding:4px 11px;border-radius:999px;background:rgba(255,88,100,.16);color:#ff8c9a;border:1px solid rgba(255,120,140,.3)}
-  .meta{font-size:12px;color:var(--muted);margin-top:9px}
-  .why{font-size:13px;color:var(--muted);margin-top:9px;border-left:2px solid #ff5864;padding-left:11px}
-  .qa .q{font-size:12px;color:#ff7a8c;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-  .qa .old{color:var(--bad);text-decoration:line-through;opacity:.6;margin-top:4px}
-  .qa .new{color:var(--ink);font-weight:600;font-size:15.5px;margin-top:4px}
-  .copy{font-size:12px;padding:8px 13px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--ink)}
-  .copy:hover{border-color:#ff5864;background:rgba(255,88,100,.12)}
-
-  .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:13px}
-  .photo{background:var(--glass2);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.28s}
-  .photo:hover{transform:translateY(-4px) scale(1.02);border-color:rgba(255,120,140,.4);box-shadow:0 16px 30px rgba(253,41,123,.25)}
-  .photo img{width:100%;height:155px;object-fit:cover;display:block;background:#1a0f16}
-  .photo .pb{padding:11px}
-  .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px}
-  .tag.keep{background:rgba(47,230,160,.16);color:var(--good)} .tag.drop{background:rgba(255,90,110,.16);color:var(--bad)}
-  .small{font-size:12px;color:var(--muted);margin-top:6px}
-  .chips{display:flex;flex-wrap:wrap;gap:9px}
-  .gap{font-size:13px;background:rgba(255,140,66,.12);border:1px solid rgba(255,140,66,.3);color:#ffb98a;padding:7px 13px;border-radius:999px;transition:.2s}
-  .gap:hover{transform:scale(1.05);background:rgba(255,140,66,.2)}
-  .order{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--muted)}
-
-  .console{margin-top:16px;background:rgba(8,5,10,.85);border:1px solid var(--line);border-radius:14px;padding:16px;
-    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;max-height:360px;overflow:auto;white-space:pre-wrap}
-  .console .l{color:#9a8089} .console .ok{color:var(--good)} .console .warn{color:var(--warn)}
-  .console .bad{color:var(--bad)} .console .head{color:var(--ink);font-weight:700}
-  .console .hint{color:#ffb98a;background:rgba(255,140,66,.1);border-left:2px solid #ff8c42;padding:5px 9px;border-radius:5px;display:block;margin:3px 0}
-
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--flame);color:#fff;
-    font-weight:800;padding:12px 20px;border-radius:12px;opacity:0;transition:.3s;pointer-events:none;box-shadow:0 10px 30px rgba(253,41,123,.5)}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-  @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
-  #results.enter>*{animation:fadeUp .55s cubic-bezier(.2,.8,.2,1) both}
-  #results.enter>*:nth-child(1){animation-delay:.02s}
-  #results.enter>*:nth-child(2){animation-delay:.09s}
-  #results.enter>*:nth-child(3){animation-delay:.16s}
-  #results.enter>*:nth-child(4){animation-delay:.23s}
-  #results.enter>*:nth-child(5){animation-delay:.30s}
-  #results.enter>*:nth-child(6){animation-delay:.37s}
-  #results.enter>*:nth-child(7){animation-delay:.44s}
-  @media(max-width:560px){.scores{grid-template-columns:1fr}h1{font-size:25px}}
-  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+<link rel="stylesheet" href="/assets/style.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23FD267D'/%3E%3Cstop offset='1' stop-color='%23FF8C42'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EW%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
-<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
-<div class="grain"></div>
+<div class="bg-blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 
-<div class="wrap">
-  <div class="top">
-    <div class="brand"><span class="flame">🔥</span> <span class="gtext">Tinder AI Coach</span></div>
-    <div class="badge" id="backendBadge">checking backend…</div>
-  </div>
-
-  <!-- HERO -->
-  <div style="text-align:center;margin:4px 0 24px">
-    <h1>Make your profile <span class="gtext">impossible<br>to swipe left.</span></h1>
-    <p class="sub" style="max-width:640px;margin:10px auto 0;font-size:16px">A sharper bio, punchier prompts,
-      a photo plan, and exactly what's holding you back — powered by a big Hugging&nbsp;Face model.</p>
-  </div>
-
-  <!-- ① CONNECT -->
-  <div class="card" id="connectCard">
-    <h2><span class="step">1</span>Connect your AI engines</h2>
-    <p class="sub">Set up your API keys to power the coach. Keys are saved securely to your local <code>.env</code> file.</p>
-    
-    <!-- HF Engine -->
-    <div style="margin-bottom: 20px;">
-      <p class="sub" style="margin-bottom: 8px;"><b>Text Brain (Hugging Face)</b> — powers bio and prompt suggestions:
-        <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener" style="color:#ff7a8c">Get token</a>
-      </p>
-      <div class="row">
-        <input type="password" id="hfKey" placeholder="hf_…  your Hugging Face API key" autocomplete="off" spellcheck="false" />
-        <button class="btn" id="saveKeyBtn">Save key</button>
-      </div>
-      <div class="status" id="hfStatus"><span class="led"></span><span>Checking…</span></div>
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/"><span class="mark">🔥</span> Wingman&nbsp;AI</a>
+    <div class="nav-links">
+      <a href="#how" class="hide-m">How it works</a>
+      <a href="#features" class="hide-m">Features</a>
+      <a href="#security" class="hide-m">Security</a>
+      <a href="#faq" class="hide-m">FAQ</a>
+      <a href="/docs" class="hide-m">Docs</a>
+      <a class="btn small" href="/app">Open App</a>
     </div>
+  </div>
+</nav>
 
-    <!-- Gemini Engine -->
+<!-- ================= HERO ================= -->
+<header class="wrap hero">
+  <div>
+    <span class="chip"><span class="badge-dot"></span> AI-powered Tinder assistant</span>
+    <h1 style="margin-top:22px;">Your Tinder.<br/><span class="gtext">Smarter.</span></h1>
+    <p class="muted" style="font-size:18.5px; max-width:480px;">
+      Wingman AI connects to <strong style="color:var(--ink)">your own Tinder account</strong>, studies your
+      profile and conversations, and coaches you — better bio, sharper prompts, replies you actually want to send.
+    </p>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:26px;">
+      <a class="btn" href="/app">Connect Tinder →</a>
+      <a class="btn ghost" href="#how">See how it works</a>
+    </div>
+    <p class="muted small" style="margin-top:18px;">
+      ✅ Works in 2 minutes &nbsp;·&nbsp; 🔒 Your token never leaves your session &nbsp;·&nbsp; 🤝 Nothing is sent without your approval
+    </p>
+  </div>
+
+  <!-- product mock -->
+  <div class="card" style="padding:0; overflow:hidden; border-radius:24px;">
+    <div style="background:var(--flame); padding:16px 22px; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+      <strong style="font-family:var(--display);">Wingman AI</strong>
+      <span style="background:rgba(255,255,255,.2); padding:4px 12px; border-radius:999px; font-size:12.5px; font-weight:600;">● Connected as Dinesh</span>
+    </div>
+    <div style="padding:20px 22px;">
+      <div style="display:flex; gap:12px; align-items:center; margin-bottom:14px;">
+        <div style="width:52px;height:52px;border-radius:16px;background:var(--flame-soft);display:grid;place-items:center;font-size:24px;">📈</div>
+        <div>
+          <div style="font-weight:700;">Profile score</div>
+          <div class="muted small">68 → <strong style="color:var(--good)">86</strong> after Wingman's rewrite</div>
+        </div>
+        <div style="margin-left:auto; font-family:var(--display); font-size:30px; font-weight:700;" class="gtext">86</div>
+      </div>
+      <div style="border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--bg);">
+        <div class="muted small" style="margin-bottom:6px;"><strong style="color:var(--ink)">Suggested reply</strong> · for Ananya</div>
+        <div style="font-size:14.5px;">“Indiranagar cart it is — but if you've been 40 times, you're picking the table. I'll bring the argument about momos.”</div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <span class="tag" style="margin:0;">😄 Casual</span>
+          <span class="tag" style="margin:0;">✏️ Edit</span>
+          <span class="tag" style="margin:0; background:var(--good-soft); color:var(--good); border-color:transparent;">Send ↗ (you approve)</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <div class="card" style="flex:1; padding:12px; text-align:center; box-shadow:none;"><div style="font-size:22px;">💬</div><div class="small" style="font-weight:600;">3 chats to answer</div></div>
+        <div class="card" style="flex:1; padding:12px; text-align:center; box-shadow:none;"><div style="font-size:22px;">🖼️</div><div class="small" style="font-weight:600;">Photo order fixed</div></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="block" id="how" style="background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:44px;">
+      <h2>Up and running in <span class="gtext">four steps</span></h2>
+      <p class="muted" style="max-width:560px; margin:0 auto;">No downloads, no technical skills. If you can copy and paste, you can use Wingman.</p>
+    </div>
+    <div class="grid cols-3">
+      <div class="card hoverable">
+        <div class="step-row"><div class="step-num">1</div>
+          <div><h3>Connect Tinder</h3><p class="muted">Open Tinder in your browser, copy your account token with our 2-minute visual guide, and paste it into Wingman. <a href="/guide">Show me the guide →</a></p></div>
+        </div>
+      </div>
+      <div class="card hoverable">
+        <div class="step-row"><div class="step-num">2</div>
+          <div><h3>Analyze</h3><p class="muted">Wingman reads your profile with Google's Gemini AI — bio, prompts, photos — and scores what's working and what isn't.</p></div>
+        </div>
+      </div>
+      <div class="card hoverable">
+        <div class="step-row"><div class="step-num">3</div>
+          <div><h3>Improve</h3><p class="muted">Get rewritten bios, sharper prompt answers, photo feedback, and one-tap publishing (you approve every change).</p></div>
+        </div>
+      </div>
+      <div class="card hoverable">
+        <div class="step-row"><div class="step-num">4</div>
+          <div><h3>Chat better</h3><p class="muted">Wingman reads your conversations, suggests where they're going, and drafts replies in your chosen tone.</p></div>
+        </div>
+      </div>
+      <div class="card hoverable">
+        <div class="step-row"><div class="step-num">✓</div>
+          <div><h3>You stay in charge</h3><p class="muted">Every send is a two-step action: draft → your review → your explicit Send. Wingman never acts alone.</p></div>
+        </div>
+      </div>
+      <div class="card hoverable" style="background:linear-gradient(135deg,#FFF6F8,#FFF9F4); border-color:rgba(253,77,94,.2);">
+        <div class="step-row"><div class="step-num">💡</div>
+          <div><h3>No account yet?</h3><p class="muted">Try the <strong>demo mode</strong> — full product with sample data, zero connection needed. <a href="/app">Open the app →</a></p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="block" id="features">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:44px;">
+      <h2>Everything your profile <span class="gtext">wishes you knew</span></h2>
+      <p class="muted">Six tools, one assistant — all reading your real account.</p>
+    </div>
+    <div class="grid cols-3">
+      <div class="card hoverable"><div class="icon-chip">🔍</div><h3>AI Profile Analysis</h3><p class="muted">Honest scores and specific fixes for your bio, prompts, and photos — grounded in a dating knowledge pack, not generic advice.</p></div>
+      <div class="card hoverable"><div class="icon-chip">✍️</div><h3>Bio &amp; Prompt Rewrites</h3><p class="muted">2–3 bio variants in different tones, rewritten prompt answers built from your real interests. Publish with one confirmed tap.</p></div>
+      <div class="card hoverable"><div class="icon-chip">🖼️</div><h3>Photo Feedback</h3><p class="muted">Gemini actually looks at your photos — framing, background, outfit, expression — and tells you which order they should be in.</p></div>
+      <div class="card hoverable"><div class="icon-chip">💬</div><h3>Conversation Assistant</h3><p class="muted">Per-chat analysis: tone, engagement, topics worth pulling on, and what to say next — in the tone you pick.</p></div>
+      <div class="card hoverable"><div class="icon-chip">📤</div><h3>Review-then-Send</h3><p class="muted">Drafts, edits, and an explicit Send button. The AI never messages anyone on its own — that's a hard rule in the code.</p></div>
+      <div class="card hoverable"><div class="icon-chip">📊</div><h3>Insights</h3><p class="muted">Match activity, response patterns, and where conversations stall — computed from your real history.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECURITY ================= -->
+<section class="block" id="security" style="background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap security-grid">
     <div>
-      <p class="sub" style="margin-bottom: 8px;"><b>Fast Photo Vision (Google Gemini)</b> — bypasses slow local model download:
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:#ff7a8c">Get API key</a>
-      </p>
-      <div class="row">
-        <input type="password" id="geminiKey" placeholder="AIzaSy…  your Google Gemini API key" autocomplete="off" spellcheck="false" />
-        <button class="btn" id="saveGeminiKeyBtn">Save key</button>
+      <span class="chip">🔒 Security first</span>
+      <h2 style="margin-top:18px;">Your key, kept like a key</h2>
+      <p class="muted">Wingman connects with the same credential your browser uses. Here's exactly how it's treated:</p>
+      <div class="grid" style="gap:14px; margin-top:10px;">
+        <div class="step-row"><span style="font-size:20px;">🧠</span><div><strong>In memory only.</strong><span class="muted"> Your token lives in the app's session memory — never in a file, database, log, or analytics.</span></div></div>
+        <div class="step-row"><span style="font-size:20px;">🙈</span><div><strong>Masked everywhere.</strong><span class="muted"> After you paste it, it's shown only as a short fingerprint like <code>bff5…9f31</code>.</span></div></div>
+        <div class="step-row"><span style="font-size:20px;">🎛️</span><div><strong>Session-bound.</strong><span class="muted"> Disconnect or step away, and it's gone. Sessions expire automatically after 2 hours idle.</span></div></div>
+        <div class="step-row"><span style="font-size:20px;">🏠</span><div><strong>Local by design.</strong><span class="muted"> Live Tinder access runs on <em>your</em> machine — the public demo instance physically cannot call Tinder.</span></div></div>
+        <div class="step-row"><span style="font-size:20px;">🚫</span><div><strong>No silent actions.</strong><span class="muted"> Writes to your profile or messages require your explicit confirmation, every single time.</span></div></div>
       </div>
-      <div class="status" id="geminiStatus"><span class="led"></span><span>Checking Gemini key…</span></div>
+      <p class="small muted" style="margin-top:16px;">Wingman is an independent tool, not affiliated with Tinder. Use it with your own account and within Tinder's terms.</p>
     </div>
-
-    <!-- Active Engine Preferences -->
-    <div style="margin-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px;">
-      <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 15px; color: #ff7a8c; font-family: 'Space Grotesk', sans-serif;">Active Engine Preferences</h3>
-      
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
-        <!-- LLM Backend Selector -->
-        <div>
-          <p class="sub" style="margin-bottom: 8px; font-size: 13.5px;"><b>Text Brain Backend (LLM)</b></p>
-          <select id="brainBackendSelect" style="width: 100%; box-sizing: border-box;">
-            <option value="hf">Hugging Face (Cloud)</option>
-            <option value="gemini">Google Gemini (Cloud)</option>
-            <option value="ollama">Ollama (Local)</option>
-          </select>
+    <div class="card" style="padding:34px;">
+      <div class="mock">
+        <div class="bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="url">🔒 wingman · session</div>
         </div>
-        
-        <!-- VLM Backend Selector -->
-        <div>
-          <p class="sub" style="margin-bottom: 8px; font-size: 13.5px;"><b>Photo Vision Backend (VLM)</b></p>
-          <select id="visionBackendSelect" style="width: 100%; box-sizing: border-box;">
-            <option value="gemini">Google Gemini (Cloud)</option>
-            <option value="ollama">Ollama (Local)</option>
-          </select>
+        <div class="body">
+          <div class="lbl">Session</div>
+          <div style="display:flex; justify-content:space-between; padding:10px 12px; background:var(--good-soft); border-radius:10px; margin-bottom:12px;">
+            <span style="color:var(--good); font-weight:700;">● Live · Dinesh</span>
+            <span style="color:var(--good);" class="small">token bff5…9f31 (masked)</span>
+          </div>
+          <div class="row-line" style="width:88%"></div>
+          <div class="row-line" style="width:62%"></div>
+          <div class="hl" style="margin-top:14px;">expires: 2h idle &nbsp;·&nbsp; disconnect: one click</div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- ② ANALYZE -->
-  <div class="card" id="inputCard">
-    <h2><span class="step">2</span>Dating Coach Engine</h2>
-    <p class="sub">Choose whether to analyze/improve your existing live Tinder profile or generate a completely new profile from scratch based on a description of yourself.</p>
-
-    <!-- Tab selectors -->
-    <div style="display:flex; border-bottom: 2px solid var(--line); margin-bottom: 20px;">
-      <button id="tabLive" class="tab-btn active" style="flex:1; background:none; border:none; border-bottom: 2px solid var(--accent); padding:12px; color:var(--accent); font-size:15px; font-weight:700; cursor:pointer; text-align:center; transition: all .25s; opacity: 1;">Improve Live Profile</button>
-      <button id="tabDesc" class="tab-btn" style="flex:1; background:none; border:none; padding:12px; color:var(--ink); font-size:15px; font-weight:700; cursor:pointer; text-align:center; transition: all .25s; opacity:0.6;">Generate from Description</button>
-    </div>
-
-    <!-- Mode 1: Live Profile Container -->
-    <div id="modeLiveContainer">
-      <p class="sub">Paste your Tinder <b>X-Auth-Token</b> (it changes each session). Used once to read your
-        profile — <b>never stored or logged</b>.</p>
-      <div class="row">
-        <input type="password" id="token" placeholder="Paste your Tinder X-Auth-Token…" autocomplete="off" spellcheck="false" />
-        <button class="btn" id="goBtn">Analyze ✨</button>
-      </div>
-      <div class="row" style="margin-top:11px">
-        <button class="btn ghost" id="sampleBtn">▶ Try with sample data</button>
-      </div>
-      <label class="toggle"><input type="checkbox" id="useVision" />
-        <span>Also analyze my photos with local vision <span id="visionHint"></span></span></label>
-      <details style="margin-top:15px">
-        <summary>How do I get my X-Auth-Token?</summary>
-        <ol>
-          <li>Open <b>tinder.com</b> in your browser and log in.</li>
-          <li>Press <b>F12</b> → <b>Network</b> tab → filter for <code>api.gotinder.com</code>.</li>
-          <li>Click any request → <b>Headers</b> → copy the value of <code>X-Auth-Token</code>.</li>
-          <li>Paste it above. (Grab a fresh one if it expires.)</li>
-        </ol>
-      </details>
-    </div>
-
-    <!-- Mode 2: Description Container -->
-    <div id="modeDescContainer" class="hidden">
-      <p class="sub">Explain your daily life, job, personality, workout/lifestyle habits, relationship intent, and other details. The coach will generate bio options, prompt answers, and guidelines from scratch.</p>
-      <textarea id="selfDescription" style="width:100%; min-height:120px; background:rgba(0,0,0,0.25); border:1px solid var(--line); color:var(--ink); border-radius:12px; padding:12px; font-size:15px; font-family:inherit; resize:vertical; margin-bottom:12px; outline:none; transition: border-color .25s;" placeholder="Tell the AI about yourself (e.g. 'I work as a designer in Mumbai. I am 25, love playing tennis, eating filter coffee, and trekking. I am looking for something serious, drink socially, and do not smoke...')"></textarea>
-      
-      <p class="sub" style="margin-bottom:8px;"><b>Optional: Tinder X-Auth-Token</b> (allows directly updating the generated bios & prompts live to your account)</p>
-      <input type="password" id="tokenDesc" placeholder="Paste Tinder Token (optional)..." autocomplete="off" spellcheck="false" style="width:100%; margin-bottom:15px; box-sizing:border-box;" />
-
-      <button class="btn" id="generateBtn" style="width:100%;">Generate Profile ✨</button>
+<!-- ================= FAQ ================= -->
+<section class="block" id="faq">
+  <div class="wrap-narrow">
+    <div class="center" style="margin-bottom:38px;"><h2>Questions, <span class="gtext">answered</span></h2></div>
+    <details class="faq"><summary>What is the token, and why does Wingman need it?</summary>
+      <p>When you log into Tinder on the web, your browser keeps a login credential (a 36-character code). Wingman uses that same credential to read <em>your</em> account — exactly like your browser does. Without it, Wingman can't see your profile.</p></details>
+    <details class="faq"><summary>Where do I get the token?</summary>
+      <p>Open <code>tinder.com</code> logged in, open the browser's inspection tools, and copy one value from storage. It takes about 2 minutes — the <a href="/guide">step-by-step visual guide</a> shows exactly where.</p></details>
+    <details class="faq"><summary>Is my token stored anywhere?</summary>
+      <p>No. It lives in the app's memory for your session and is dropped when you disconnect, log out, or after 2 idle hours. It is never written to disk, never logged, and never sent to anything except Tinder's own API.</p></details>
+    <details class="faq"><summary>How does the AI work?</summary>
+      <p>Wingman runs on Google Cloud's Gemini models via Vertex AI. Your profile and conversations are sent to Gemini to produce analyses and drafts — nothing is retained by the model.</p></details>
+    <details class="faq"><summary>Can the AI send messages for me?</summary>
+      <p>It can draft them — but sending is always your call. Every message goes: AI drafts → you edit if you like → you press <strong>Send</strong>. There is no auto-send anywhere in the product, by design.</p></details>
+    <details class="faq"><summary>Can it swipe for me?</summary>
+      <p>Not today. Swiping is technically researched but deliberately <strong>not enabled</strong> until it's verified safe and reliable — see the honest status in <a href="/docs">Docs → Technical</a>.</p></details>
+    <details class="faq"><summary>What happens when the token expires?</summary>
+      <p>Tinder tokens eventually stop working (for example when you log out). Wingman detects it, tells you in plain words, and asks you to paste a fresh one. Nothing breaks silently.</p></details>
+    <details class="faq"><summary>Can I disconnect my account?</summary>
+      <p>Any time — one click drops the token from memory immediately. You can also log out of Tinder on the web to invalidate the token everywhere.</p></details>
+    <div class="center" style="margin-top:36px;">
+      <a class="btn" href="/app">Connect Tinder →</a>
+      <div class="muted small" style="margin-top:12px;">or <a href="/app">explore the demo</a> first — no connection needed</div>
     </div>
   </div>
+</section>
 
-  <!-- ③ LOCAL VISION SETUP -->
-  <div class="card">
-    <h2><span class="step">3</span>Photo vision — local &amp; free (optional)</h2>
-    <p class="sub" style="margin-bottom:16px">Your photos stay on your machine: a small vision model runs
-      locally via <b>Ollama</b> so the coach can actually <i>see</i> your pics. The text brain still uses
-      Hugging&nbsp;Face (step 1) — this is just for photos. Install the vision model once (downloads ~1&nbsp;GB). ☕</p>
-    <div class="row">
-      <select id="setupModel">
-        <option value="moondream">moondream — tiny, ~830 MB (8 GB RAM laptops)</option>
-        <option value="llava">llava — larger, ~4.7 GB (more detailed)</option>
-      </select>
-      <button class="btn" id="setupBtn">⚙ Set up local AI</button>
+<footer class="site">
+  <div class="wrap footer-row">
+    <a class="brand" href="/"><span class="mark">🔥</span> Wingman&nbsp;AI</a>
+    <div class="links">
+      <a href="/guide">Connect guide</a>
+      <a href="/docs">Docs</a>
+      <a href="/app">Open App</a>
+      <a href="https://github.com/gorredinesh21/TINDER_MCP_AI">GitHub</a>
     </div>
-    <div class="console hidden" id="setupConsole"></div>
-    <p class="note">Runs only known commands (download Ollama, pull the model). If your network blocks it
-      (common on office Wi-Fi) it says so, and you can switch to the HF key instead.</p>
+    <div class="muted small">An independent AI assistant · not affiliated with Tinder</div>
   </div>
-
-  <!-- LOADING -->
-  <div class="card hidden" id="loadingCard">
-    <div class="load"><div class="spin"></div>
-      <div><b id="loadMsg">Reading your profile…</b><div class="note" style="margin-top:2px">
-        The coach is running — this can take ~20–40s on the big model.</div></div>
-    </div>
-  </div>
-
-  <!-- ERROR -->
-  <div class="card err hidden" id="errorCard"><b>Couldn't run the coach.</b><div id="errorMsg" style="margin-top:6px"></div></div>
-
-  <!-- RESULTS -->
-  <div id="results" class="hidden">
-    <div class="card">
-      <div class="phead">
-        <span class="name" id="pName"></span>
-        <span class="pill" id="pMeta"></span>
-        <span class="pill" id="pVerified"></span>
-      </div>
-      <div class="scores" style="margin-top:20px">
-        <div class="score"><div class="ring" id="ringOverall"><i id="numOverall">0</i></div><span>Overall</span></div>
-        <div class="score"><div class="ring" id="ringPhotos"><i id="numPhotos">0</i></div><span>Photos</span></div>
-        <div class="score"><div class="ring" id="ringBio"><i id="numBio">0</i></div><span>Bio</span></div>
-      </div>
-      <p class="sub" id="summary" style="margin:20px 0 0"></p>
-    </div>
-
-    <div class="card hl">
-      <h2>🔥 Recommended new bio</h2>
-      <textarea id="bioBest" style="width:100%; min-height:100px; background:rgba(0,0,0,0.25); border:1px solid var(--line); color:var(--ink); border-radius:12px; padding:12px; font-size:16px; font-family:inherit; resize:vertical; margin-bottom:12px; outline:none; transition: border-color .25s;" class="biotext"></textarea>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="copy" data-copy="bioBest">Copy bio</button>
-        <button class="btn" style="padding:10px 18px; font-size:14px;" onclick="updateTinderBio('bioBest')">Update to Tinder 🔥</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Bio options</h2>
-      <div class="stack" id="bioVariants"></div>
-    </div>
-
-    <div class="card" id="promptCard">
-      <h2>Profile Prompts 🔥</h2>
-      
-      <!-- Current Prompts Section -->
-      <div id="currentPromptsContainer" style="margin-bottom: 24px;">
-        <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 12px; color: #ff7a8c; font-family: 'Space Grotesk', sans-serif;">Active Prompts (<span id="currentPromptsCount">0</span>/3 active)</h3>
-        <div class="stack" id="currentPromptsStack"></div>
-      </div>
-      
-      <!-- AI Suggestions Section -->
-      <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
-          <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin: 0; color: #ff7a8c; font-family: 'Space Grotesk', sans-serif;">AI Suggested Prompts</h3>
-          <button class="btn ghost" id="suggestPromptsBtn" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; margin: 0;">↺ Refresh Suggestions</button>
-        </div>
-        <div id="suggestPromptsLoading" class="hidden" style="padding: 20px 0; text-align: center;">
-          <div class="spin" style="margin: 0 auto 10px;"></div>
-          <span style="font-size: 13px; color: var(--muted);">AI is picking best questions & drafting answers...</span>
-        </div>
-        <div class="stack" id="suggestedPromptsStack"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Photo plan</h2>
-      <div class="order" id="photoOrder" style="margin-bottom:13px"></div>
-      <div class="photos" id="photos"></div>
-    </div>
-
-    <div class="card">
-      <h2>What's missing</h2>
-      <div class="chips" id="gaps"></div>
-    </div>
-
-    <div class="card" id="habitsCard">
-      <h2>Habits & Details Optimization Guide</h2>
-      <p class="sub">Dating-science recommendations for your personal details and tags.</p>
-      <div class="stack" id="habitsGuide"></div>
-    </div>
-
-    <div class="row">
-      <button class="btn ghost" id="downloadBtn">⬇ Download improved profile (JSON)</button>
-      <button class="btn ghost" id="againBtn">↺ Analyze again</button>
-    </div>
-  </div>
-</div>
-<div class="toast" id="toast">Copied!</div>
-
-<script>
-const $ = id => document.getElementById(id);
-let lastImproved = null;
-
-function color(v){ return v>=70 ? 'var(--good)' : v>=40 ? 'var(--warn)' : 'var(--bad)'; }
-function setRing(ringId, numId, v){
-  v = Math.max(0, Math.min(100, v|0));
-  const r = $(ringId); r.style.setProperty('--c', color(v));
-  requestAnimationFrame(()=>{ r.style.setProperty('--v', v); });   // animates the conic fill
-  const n = $(numId); const t0 = performance.now(), dur = 1100;     // count-up the number
-  (function tick(t){ const p = Math.min(1,(t-t0)/dur); n.textContent = Math.round(v*(p<1?(1-Math.pow(1-p,3)):1)); if(p<1) requestAnimationFrame(tick); })(t0);
-}
-function esc(s){ const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; }
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1400); }
-function show(el){ el.classList.remove('hidden'); }
-function hide(el){ el.classList.add('hidden'); }
-
-let HEALTH = {};
-function setText(el, t){ el.querySelector('span:last-child').textContent = t; }
-async function health(){
-  try{
-    const h = await (await fetch('/api/health')).json(); HEALTH = h;
-    $('backendBadge').textContent = `⚡ ${h.backend} · ${h.model||'?'}`;
-    const st = $('hfStatus'), connected = h.backend==='hf' && h.key_present;
-    st.classList.toggle('on', connected);
-    setText(st, connected ? `Connected — ${h.model}`
-      : (h.backend==='hf' ? 'No HF key yet — paste it above to connect.'
-                          : `Running local (${h.model}). Add an HF key for bigger, smarter models.`));
-    
-    // Gemini Status
-    const gst = $('geminiStatus'), geminiConnected = h.gemini_present;
-    gst.classList.toggle('on', geminiConnected);
-    setText(gst, geminiConnected ? 'Google Gemini vision key active ✓'
-                                 : 'No Gemini key — will default to local Ollama vision if checked.');
-
-    const vh = $('visionHint');
-    if (h.vision_backend === 'gemini' && h.gemini_present) {
-      vh.textContent = '(Gemini cloud active ✓)';
-      vh.style.color = 'var(--good)';
-    } else {
-      vh.textContent = h.vision_ready ? '(local VLLM active ✓)' : '(needs local setup)';
-      vh.style.color = h.vision_ready ? 'var(--good)' : '#ff8c9a';
-    }
-
-    if (h.backend) $('brainBackendSelect').value = h.backend;
-    if (h.vision_backend) $('visionBackendSelect').value = h.vision_backend;
-  }catch{ $('backendBadge').textContent = 'backend: unknown'; }
-}
-async function saveKey(){
-  const key = $('hfKey').value.trim(), btn = $('saveKeyBtn');
-  if(!key){ toast('Paste your HF key first'); return; }
-  btn.disabled = true; btn.textContent = 'Saving…';
-  try{
-    const res = await fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({hf_token:key})});
-    const d = await res.json(); if(!res.ok) throw new Error(d.detail || 'failed');
-    $('hfKey').value = ''; toast('Key saved 🔑'); await health();
-  }catch(e){ const st=$('hfStatus'); st.classList.remove('on'); setText(st, '✗ '+e.message); }
-  btn.disabled = false; btn.textContent = 'Save key';
-}
-async function saveGeminiKey(){
-  const key = $('geminiKey').value.trim(), btn = $('saveGeminiKeyBtn');
-  if(!key){ toast('Paste your Gemini key first'); return; }
-  btn.disabled = true; btn.textContent = 'Saving…';
-  try{
-    const res = await fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({gemini_token:key})});
-    const d = await res.json(); if(!res.ok) throw new Error(d.detail || 'failed');
-    $('geminiKey').value = ''; toast('Gemini key saved 🔑'); await health();
-  }catch(e){ const st=$('geminiStatus'); st.classList.remove('on'); setText(st, '✗ '+e.message); }
-  btn.disabled = false; btn.textContent = 'Save key';
-}
-
-async function saveBackends(){
-  const brain = $('brainBackendSelect').value;
-  const vision = $('visionBackendSelect').value;
-  try{
-    const res = await fetch('/api/config', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({brain_backend:brain, vision_backend:vision})
-    });
-    const d = await res.json();
-    if(!res.ok) throw new Error(d.detail || 'failed');
-    toast('Preferences updated 🔥');
-    await health();
-  }catch(e){
-    toast('❌ ' + e.message);
-  }
-}
-
-async function analyze(useSample){
-  hide($('errorCard')); hide($('results')); $('results').classList.remove('enter');
-  show($('loadingCard'));
-  $('loadMsg').textContent = useSample ? 'Loading sample profile…' : 'Reading your profile…';
-  try{
-    const uv = $('useVision').checked;
-    const body = useSample ? {use_sample:true, use_vision:uv} : {token: $('token').value, use_vision:uv};
-    const res = await fetch('/api/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.detail || 'Request failed');
-    render(data);
-  }catch(e){
-    hide($('loadingCard'));
-    $('errorMsg').textContent = e.message;
-    show($('errorCard'));
-  }
-}
-
-function render(data){
-  hide($('loadingCard'));
-  const p = data.profile, r = data.report;
-  lastImproved = data.improved;
-
-  $('pName').textContent = p.name || 'Your profile';
-  $('pMeta').textContent = [p.age, p.city].filter(Boolean).join(' · ');
-  $('pVerified').textContent = p.verified ? '✓ Verified' : 'Not verified';
-  $('pVerified').className = 'pill' + (p.verified ? ' ok' : '');
-
-  $('summary').textContent = r.summary || '';
-  
-  const bioVal = (data.improved && data.improved.bio) || (r.bio_variants[0]||{}).text || '';
-  $('bioBest').value = bioVal;
-
-  $('bioVariants').innerHTML = (r.bio_variants||[]).map((v,i)=>`
-    <div class="item">
-      <span class="chip">${esc(v.tone)}</span>
-      <textarea id="bv${i}" style="width:100%; min-height:80px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical; margin:11px 0 8px; outline:none;" class="biotext">${esc(v.text)}</textarea>
-      <div class="meta">${(v.char_count||v.text.length)} chars</div>
-      <div class="why">${esc(v.rationale)}</div>
-      <div style="margin-top:11px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="copy" data-copy="bv${i}">Copy</button>
-        <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="updateTinderBio('bv${i}')">Update to Tinder 🔥</button>
-      </div>
-    </div>`).join('');
-
-  // Render Prompts
-  hide($('currentPromptsContainer'));
-  $('suggestedPromptsStack').innerHTML = '';
-  show($('promptCard'));
-  
-  const token = ($('token').value || $('tokenDesc').value || '').trim();
-  if (token) {
-    fetchAndRenderPromptSuggestions();
-  } else {
-    renderOfflinePromptsFallback(p.prompts || [], r.improved_prompts || []);
-  }
-
-  $('photoOrder').textContent = (r.recommended_photo_order||[]).length
-    ? 'Recommended order:  ' + r.recommended_photo_order.join('  →  ') : '';
-  const byId = {}; (p.photos||[]).forEach(ph=>byId[ph.id]=ph);
-  $('photos').innerHTML = (r.photo_assessments||[]).map(a=>{
-    const ph = byId[a.photo_id]||{};
-    const img = ph.url ? `<img src="${esc(ph.url)}" loading="lazy" onerror="this.style.display='none'">` : '';
-    return `<div class="photo">${img}<div class="pb">
-      <span class="tag ${a.keep?'keep':'drop'}">${a.keep?('KEEP'+(a.suggested_slot?' · slot '+a.suggested_slot:'')):'DROP'}</span>
-      ${(a.strengths||[]).length?`<div class="small">✓ ${esc(a.strengths.join(', '))}</div>`:''}
-      ${(a.issues||[]).length?`<div class="small">✗ ${esc(a.issues.join(', '))}</div>`:''}
-    </div></div>`;
-  }).join('') || '<div class="note">No photo analysis available (vision is off in the web app).</div>';
-
-  $('gaps').innerHTML = (r.gaps||[]).map(g=>`<span class="gap">${esc(g)}</span>`).join('') || '<span class="note">None flagged. 🎉</span>';
-
-  // Populate Habits & Descriptors Guide
-  const descMap = {};
-  (p.descriptors||[]).forEach(d => {
-    if (d && d.name && d.value) {
-      descMap[d.name.toLowerCase()] = d.value;
-    }
-  });
-  const habits = [
-    {
-      name: 'Smoking',
-      current: descMap['smoking'] || descMap['smoker'] || 'Not set',
-      tip: 'Declaring "Never" smoking boosts match rates by up to 25% among health-conscious matches. If you smoke socially, declare it honestly, but avoid showing smoking in photos.'
-    },
-    {
-      name: 'Drinking',
-      current: descMap['drinking'] || 'Not set',
-      tip: '"Socially" is the optimal setting in the Indian market. "Never" is great if true. Avoid "Frequent" as it can read as party-focused.'
-    },
-    {
-      name: 'Exercise',
-      current: descMap['exercise'] || descMap['workout'] || 'Not set',
-      tip: 'Active lifestyles (e.g. "Often" or "Sometimes") signal high energy and health. Pair this with an outdoors/sports photo to build trust.'
-    },
-    {
-      name: 'Relationship Type / Intent',
-      current: p.intent || 'Not set',
-      tip: 'Indian Gen Z/Millennials increasingly value authenticity and clear intent (e.g. "Long-term" or "Long-term, open to short"). Align this strictly with your bio.'
-    },
-    {
-      name: 'Height',
-      current: descMap['height'] || 'Not set',
-      tip: 'If you are 5\'9" or above, adding your height acts as a positive signal in the Indian market. If you are shorter, it is better to leave it empty.'
-    }
-  ];
-  $('habitsGuide').innerHTML = habits.map(h => `
-    <div class="item" style="display: flex; flex-direction: column; gap: 4px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; margin-bottom: 4px;">
-        <span style="font-weight: 700; color: #ff7a8c;">${esc(h.name)}</span>
-        <span class="pill" style="font-size: 11.5px; padding: 2px 8px;">Current: ${esc(h.current)}</span>
-      </div>
-      <div class="why" style="margin-top: 2px; font-size: 13.5px; line-height: 1.4;">${esc(h.tip)}</div>
-    </div>
-  `).join('');
-
-  const res = $('results');
-  show(res); res.classList.remove('enter'); void res.offsetWidth; res.classList.add('enter');
-  setRing('ringOverall','numOverall', r.overall_score);
-  setRing('ringPhotos','numPhotos', r.photo_score);
-  setRing('ringBio','numBio', r.bio_score);
-  res.scrollIntoView({behavior:'smooth', block:'start'});
-}
-
-// ---- local AI setup (streaming) ----
-function conLine(con, text, cls){ const s=document.createElement('span'); if(cls)s.className=cls; s.textContent=text+'\n'; con.appendChild(s); con.scrollTop=con.scrollHeight; }
-function onSetupEvent(ev, con){
-  if(ev.type==='log'){ if(ev.line) conLine(con, '  '+ev.line, 'l'); return; }
-  if(ev.type==='done'){ conLine(con, ev.ok?'✅ All set — local AI is ready. Pick the Ollama backend in .env and re-run.':'⚠ Setup incomplete — see the hints above.', ev.ok?'ok head':'warn head'); return; }
-  if(ev.type==='step'){
-    const icon={running:'▶',ok:'✓',warn:'⚠',error:'✗'}[ev.status]||'•';
-    const cls ={running:'l',ok:'ok',warn:'warn',error:'bad'}[ev.status]||'l';
-    conLine(con, `${icon} ${ev.name}${ev.msg?(' — '+ev.msg):''}`, cls+' head');
-    if(ev.hint) conLine(con, '↳ '+ev.hint, 'hint');
-  }
-}
-async function runSetup(){
-  const model = $('setupModel').value, con = $('setupConsole'), btn=$('setupBtn');
-  con.innerHTML=''; show(con); btn.disabled=true; btn.textContent='Setting up… (downloads can take minutes)';
-  try{
-    const res = await fetch('/api/setup?model='+encodeURIComponent(model));
-    if(!res.ok || !res.body) throw new Error('setup endpoint unavailable');
-    const reader = res.body.getReader(), dec = new TextDecoder(); let buf='';
-    while(true){
-      const {value, done} = await reader.read(); if(done) break;
-      buf += dec.decode(value, {stream:true});
-      let nl; while((nl = buf.indexOf('\n')) >= 0){
-        const line = buf.slice(0,nl); buf = buf.slice(nl+1);
-        if(line.trim()){ try{ onSetupEvent(JSON.parse(line), con); }catch{} }
-      }
-    }
-  }catch(e){ conLine(con, '✗ '+e.message, 'bad head'); }
-  btn.disabled=false; btn.textContent='⚙ Set up local AI';
-}
-
-async function updateTinderBio(elementId){
-  const el = $(elementId);
-  const bioText = (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' ? el.value : el.textContent).trim();
-  const token = ($('token').value || $('tokenDesc').value || '').trim();
-  if(!token){
-    toast('❌ Paste your Tinder X-Auth-Token first!');
-    $('inputCard').scrollIntoView({behavior:'smooth'});
-    return;
-  }
-  const btn = event.target;
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Updating… 🚀';
-  try{
-    const res = await fetch('/api/update-bio', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token, bio: bioText })
-    });
-    const d = await res.json();
-    if(!res.ok) throw new Error(d.detail || 'Failed to update');
-    toast('🎉 Tinder Bio Updated Successfully! 🔥');
-  }catch(e){
-    toast('❌ ' + e.message);
-  }
-  btn.disabled = false;
-  btn.textContent = originalText;
-}
-
-async function fetchAndRenderPromptSuggestions() {
-  const token = ($('token').value || $('tokenDesc').value || '').trim();
-  if (!token) return;
-  
-  show($('suggestPromptsLoading'));
-  hide($('suggestedPromptsStack'));
-  
-  try {
-    const res = await fetch('/api/suggest-prompts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token, n: 3 })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Failed to fetch suggestions');
-    
-    // Render current prompts
-    renderCurrentPrompts(data.current_prompts || []);
-    
-    // Render suggestions
-    renderSuggestedPrompts(data.suggestions || [], data.catalog || []);
-    
-  } catch (e) {
-    $('suggestedPromptsStack').innerHTML = `<div class="note err" style="color: var(--bad)">Failed to load suggestions: ${esc(e.message)}</div>`;
-    show($('suggestedPromptsStack'));
-  } finally {
-    hide($('suggestPromptsLoading'));
-  }
-}
-
-function renderCurrentPrompts(current) {
-  const container = $('currentPromptsContainer');
-  const countEl = $('currentPromptsCount');
-  const stack = $('currentPromptsStack');
-  
-  show(container);
-  countEl.textContent = current.length;
-  
-  if (current.length === 0) {
-    stack.innerHTML = `<div class="note">No active prompts on your profile. Set one below or on the Tinder app!</div>`;
-    return;
-  }
-  
-  stack.innerHTML = current.map((p, i) => {
-    const qText = p.q || p.question_text || '';
-    const aText = p.a || p.answer_text || '';
-    const pId = p.id || '';
-    const qId = p.question_id || '';
-    
-    return `
-      <div class="item qa">
-        <div class="q">${esc(qText)}</div>
-        <textarea id="curPrAnswer${i}" style="width:100%; margin-top:8px; margin-bottom:8px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical;">${esc(aText)}</textarea>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="copy" data-copy="curPrAnswer${i}">Copy</button>
-          <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="updateActivePrompt('${esc(pId)}', '${esc(qId)}', '${esc(qText)}', ${i})">Update on Tinder 🔥</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-async function updateActivePrompt(pId, qId, qText, index) {
-  const el = $(`curPrAnswer${index}`);
-  const answerText = el.value.trim();
-  const token = ($('token').value || $('tokenDesc').value || '').trim();
-  if(!token){
-    toast('❌ Paste your Tinder X-Auth-Token first!');
-    $('inputCard').scrollIntoView({behavior:'smooth'});
-    return;
-  }
-  const btn = event.target;
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Updating… 🚀';
-  try{
-    const res = await fetch('/api/update-prompt', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token, question_text: qText, answer_text: answerText })
-    });
-    const d = await res.json();
-    if(!res.ok) throw new Error(d.detail || 'Failed to update');
-    toast('🎉 Tinder Prompt Updated Successfully! 🔥');
-    await fetchAndRenderPromptSuggestions();
-  }catch(e){
-    toast('❌ ' + e.message);
-  }
-  btn.disabled = false;
-  btn.textContent = originalText;
-}
-
-function renderSuggestedPrompts(suggestions, catalog) {
-  const stack = $('suggestedPromptsStack');
-  show(stack);
-  
-  if (suggestions.length === 0) {
-    stack.innerHTML = `<div class="note">No suggestions generated by AI.</div>`;
-    return;
-  }
-  
-  stack.innerHTML = suggestions.map((s, i) => {
-    const selectOptions = catalog.map(c => {
-      const selected = c.question_id === s.question_id ? 'selected' : '';
-      return `<option value="${esc(c.question_id)}" ${selected}>${esc(c.question_text)}</option>`;
-    }).join('');
-    
-    return `
-      <div class="item" style="margin-bottom: 16px;">
-        <div style="margin-bottom: 8px;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 4px;">Choose Question</label>
-          <select id="sugPrSelect${i}" style="width: 100%; min-width: 100%; padding: 8px 10px; border-radius: 8px; font-size: 14px;">
-            ${selectOptions}
-          </select>
-        </div>
-        <div style="margin-bottom: 8px;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 4px;">AI Draft Answer</label>
-          <textarea id="sugPrAnswer${i}" style="width:100%; min-height:60px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical; outline:none; margin-bottom:4px;">${esc(s.answer)}</textarea>
-        </div>
-        <div class="why" style="margin-bottom: 12px;">${esc(s.rationale)}</div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="copy" data-copy="sugPrAnswer${i}">Copy</button>
-          <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="publishSuggestedPrompt(${i})">Publish to Tinder 🔥</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-async function publishSuggestedPrompt(index) {
-  const selectEl = $(`sugPrSelect${index}`);
-  const answerEl = $(`sugPrAnswer${index}`);
-  
-  const questionId = selectEl.value;
-  const answerText = answerEl.value.trim();
-  const token = ($('token').value || $('tokenDesc').value || '').trim();
-  
-  if(!token){
-    toast('❌ Paste your Tinder X-Auth-Token first!');
-    $('inputCard').scrollIntoView({behavior:'smooth'});
-    return;
-  }
-  if(!answerText){
-    toast('❌ Prompt answer cannot be empty!');
-    return;
-  }
-  
-  const btn = event.target;
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Publishing… 🚀';
-  
-  try{
-    const res = await fetch('/api/create-prompt', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token, question_id: questionId, answer_text: answerText })
-    });
-    const d = await res.json();
-    if(!res.ok) throw new Error(d.detail || 'Failed to publish');
-    toast('🎉 Prompt Published to Tinder! 🔥');
-    await fetchAndRenderPromptSuggestions();
-  }catch(e){
-    toast('❌ ' + e.message);
-  }
-  btn.disabled = false;
-  btn.textContent = originalText;
-}
-
-function renderOfflinePromptsFallback(current, improved) {
-  const container = $('currentPromptsContainer');
-  const countEl = $('currentPromptsCount');
-  const stack = $('currentPromptsStack');
-  
-  show(container);
-  countEl.textContent = current.length || '0';
-  
-  if (current.length > 0) {
-    stack.innerHTML = current.map((p, i) => `
-      <div class="item qa">
-        <div class="q">${esc(p.q || p.question_text)}</div>
-        <textarea id="offCurPrAnswer${i}" style="width:100%; min-height:40px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical; outline:none;" readonly>${esc(p.a || p.answer_text)}</textarea>
-      </div>
-    `).join('');
-  } else {
-    stack.innerHTML = `<div class="note">No active prompts on profile. (Provide a Tinder token in Step 2 to edit/update live)</div>`;
-  }
-  
-  const suggestedStack = $('suggestedPromptsStack');
-  show(suggestedStack);
-  hide($('suggestPromptsLoading'));
-  
-  if (improved.length === 0) {
-    suggestedStack.innerHTML = `<div class="note">No suggestions generated. (Provide a Tinder token in Step 2 to generate tailored prompt suggestions)</div>`;
-    return;
-  }
-  
-  suggestedStack.innerHTML = improved.map((pr, i) => {
-    const oldByQ = {}; current.forEach(x=>oldByQ[x.q || x.question_text]=x.a || x.answer_text);
-    const oldAnswer = oldByQ[pr.q];
-    
-    return `
-      <div class="item qa">
-        <div class="q">${esc(pr.q)}</div>
-        ${oldAnswer ? `<div class="old">${esc(oldAnswer)}</div>` : ''}
-        <textarea id="offPrAnswer${i}" style="width:100%; min-height:60px; background:rgba(0,0,0,0.2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:10px; font-size:14.5px; font-family:inherit; resize:vertical; outline:none; margin-top:8px;" readonly>${esc(pr.a)}</textarea>
-        <div style="margin-top:8px;">
-          <button class="copy" data-copy="offPrAnswer${i}">Copy</button>
-          <span style="font-size: 12px; color: var(--muted); margin-left: 12px;">(Tinder token required to publish live)</span>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-async function generateFromDesc() {
-  hide($('errorCard')); hide($('results')); $('results').classList.remove('enter');
-  show($('loadingCard'));
-  $('loadMsg').textContent = 'Generating profile from description… 🚀';
-  try{
-    const desc = $('selfDescription').value.trim();
-    if(!desc){
-      throw new Error('Please enter your self-description first!');
-    }
-    const res = await fetch('/api/generate-profile', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({description: desc})
-    });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.detail || 'Generation failed');
-    render(data);
-  }catch(e){
-    hide($('loadingCard'));
-    $('errorMsg').textContent = e.message;
-    show($('errorCard'));
-  }
-}
-
-// Tab Switching
-$('tabLive').onclick = () => {
-  $('tabLive').style.opacity = '1';
-  $('tabLive').style.borderBottom = '2px solid var(--accent)';
-  $('tabLive').style.color = 'var(--accent)';
-  $('tabDesc').style.opacity = '0.6';
-  $('tabDesc').style.borderBottom = 'none';
-  $('tabDesc').style.color = 'var(--ink)';
-  show($('modeLiveContainer'));
-  hide($('modeDescContainer'));
-};
-
-$('tabDesc').onclick = () => {
-  $('tabDesc').style.opacity = '1';
-  $('tabDesc').style.borderBottom = '2px solid var(--accent)';
-  $('tabDesc').style.color = 'var(--accent)';
-  $('tabLive').style.opacity = '0.6';
-  $('tabLive').style.borderBottom = 'none';
-  $('tabLive').style.color = 'var(--ink)';
-  show($('modeDescContainer'));
-  hide($('modeLiveContainer'));
-};
-
-document.addEventListener('click', e=>{
-  const c = e.target.getAttribute && e.target.getAttribute('data-copy');
-  if(c){
-    const el = $(c);
-    const textToCopy = (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' ? el.value : el.textContent).trim();
-    navigator.clipboard.writeText(textToCopy);
-    toast('Copied! 🔥');
-  }
-});
-$('setupBtn').onclick = runSetup;
-$('saveKeyBtn').onclick = saveKey;
-$('saveGeminiKeyBtn').onclick = saveGeminiKey;
-$('hfKey').addEventListener('keydown', e=>{ if(e.key==='Enter') saveKey(); });
-$('geminiKey').addEventListener('keydown', e=>{ if(e.key==='Enter') saveGeminiKey(); });
-$('goBtn').onclick = ()=>analyze(false);
-$('sampleBtn').onclick = ()=>analyze(true);
-$('token').addEventListener('keydown', e=>{ if(e.key==='Enter') analyze(false); });
-$('generateBtn').onclick = generateFromDesc;
-$('tokenDesc').addEventListener('keydown', e=>{ if(e.key==='Enter') generateFromDesc(); });
-$('againBtn').onclick = ()=>{ hide($('results')); $('inputCard').scrollIntoView({behavior:'smooth'}); };
-$('downloadBtn').onclick = ()=>{
-  if(!lastImproved) return;
-  const blob = new Blob([JSON.stringify(lastImproved,null,2)], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'improved_profile.json'; a.click();
-};
-$('brainBackendSelect').onchange = saveBackends;
-$('visionBackendSelect').onchange = saveBackends;
-$('suggestPromptsBtn').onclick = () => {
-  const tok = ($('token').value || $('tokenDesc').value || '').trim();
-  if (tok) {
-    fetchAndRenderPromptSuggestions();
-  } else {
-    toast('❌ Paste your Tinder X-Auth-Token first!');
-  }
-};
-health();
-</script>
+</footer>
 </body>
 </html>
